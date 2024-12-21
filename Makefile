@@ -38,6 +38,10 @@ BUILD_DIR = build
 C_SOURCES =  \
 Core/Src/main.c \
 Core/Src/gpio.c \
+Core/Src/log.c \
+Core/Src/log_port_stm32f1.c \
+Core/Src/cli.c \
+Core/Src/cli_commands.c \
 Core/Src/stm32f1xx_it.c \
 Core/Src/stm32f1xx_hal_msp.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
@@ -53,6 +57,10 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pwr.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_usart.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c  
@@ -107,8 +115,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F103xB
-
+-DSTM32F103x6 \
+-DUSE_FULL_LL_DRIVER
 
 # AS includes
 AS_INCLUDES = 
@@ -163,7 +171,7 @@ vpath %.s $(sort $(dir $(ASM_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASMM_SOURCES:.S=.o)))
 vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
@@ -193,6 +201,8 @@ clean:
 #######################################
 # dependencies
 #######################################
--include $(wildcard $(BUILD_DIR)/*.d)
+-include $(shell mkdir -p $(BUILD_DIR) && cd $(BUILD_DIR) && $(CC) -MM -MF - $(C_SOURCES) 2>/dev/null)
+
+.PRECIOUS: $(BUILD_DIR)/%.o
 
 # *** EOF ***
