@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #define FLASH_PAGE_SIZE 1024
-// #define APP_START_ADDR  0x08004000
 
 int flash_init(void);
 

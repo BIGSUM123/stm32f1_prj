@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = test
+TARGET = app
 
 
 ######################################
@@ -43,15 +43,13 @@ Core/Src/log_port_stm32f1.c \
 Core/Src/cli.c \
 Core/Src/cli_commands.c \
 Core/Src/stm32f1xx_it.c \
-Core/Src/stm32f1xx_hal_msp.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 Core/Src/flash.c \
-Core/Src/boot.c
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c
 
 # Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 # Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
@@ -127,10 +125,10 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
--IDrivers/STM32F1xx_HAL_Driver/Inc \
--IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy \
--IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
--IDrivers/CMSIS/Include
+-I../Drivers/STM32F1xx_HAL_Driver/Inc \
+-I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy \
+-I../Drivers/CMSIS/Device/ST/STM32F1xx/Include \
+-I../Drivers/CMSIS/Include
 
 
 # compile gcc flags
