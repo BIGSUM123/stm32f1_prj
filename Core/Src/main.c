@@ -23,8 +23,11 @@
 #include "gpio.h"
 #include "log.h"
 #include "log_port.h"
-#include "stm32f1xx_hal.h"
 #include <stdint.h>
+#include "stm32f1xx_ll_rcc.h"
+#include "stm32f1xx_ll_system.h"
+#include "stm32f1xx_ll_utils.h"
+#include "stm32f1xx_ll_cortex.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -69,39 +72,12 @@ void SystemClock_Config(void);
  */
 int main(void)
 {
-    /* USER CODE BEGIN 1 */
-
-    /* USER CODE END 1 */
-
-    /* MCU Configuration--------------------------------------------------------*/
-
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-    HAL_Init();
-
-    /* USER CODE BEGIN Init */
-
-    /* USER CODE END Init */
-
-    /* Configure the system clock */
+    // 初始化 NVIC 优先级分组
+    NVIC_SetPriorityGrouping(0x00000003U);
     SystemClock_Config();
-
-    /* USER CODE BEGIN SysInit */
-
-    /* USER CODE END SysInit */
-
-    /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    /* USER CODE BEGIN 2 */
-
-    /* USER CODE END 2 */
-
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
-
     log_init();
-
     cli_init();
-
     cli_register_basic_commands();
 
     while (1)
@@ -111,7 +87,6 @@ int main(void)
             cli_process_char(ch);
         }
     }
-    /* USER CODE END 3 */
 }
 
 /**
@@ -120,33 +95,34 @@ int main(void)
  */
 void SystemClock_Config(void)
 {
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+    // 配置 Flash 等待周期和预取缓冲
+    LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
+    LL_FLASH_EnablePrefetch();
 
-    // 配置 HSI + PLL
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-    RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
-    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;  // 8MHz/2 * 16 = 72MHz
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    // 使能 HSI
+    LL_RCC_HSI_Enable();
+    while(LL_RCC_HSI_IsReady() != 1);
 
-    // 配置系统时钟
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                                |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;    // 使用PLL作为系统时钟
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;          // 72MHz
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;           // 36MHz
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;           // 72MHz
+    // 配置 PLL (HSI/2 * 16 = 72MHz)
+    LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_16);
+    
+    // 使能 PLL
+    LL_RCC_PLL_Enable();
+    while(LL_RCC_PLL_IsReady() != 1);
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    // 设置系统分频
+    LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2); 
+    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+    
+    // 设置系统时钟源为 PLL
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+    while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+
+    // 配置 SysTick
+    SystemCoreClockUpdate();
+    LL_InitTick(72000000, 1000U);  // 1ms 的 SysTick 中断
+    LL_SYSTICK_EnableIT();
 }
 
 /* USER CODE BEGIN 4 */

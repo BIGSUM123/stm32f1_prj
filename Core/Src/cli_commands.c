@@ -1,8 +1,7 @@
 #include "cli_commands.h"
-#include "stm32f1xx_hal.h"
 #include "cli.h"
 #include "log.h"
-#include "stm32f1xx_hal_gpio.h"
+#include "gpio.h"
 #include <string.h>
 
 static int cmd_help(int argc, char *argv[])
@@ -22,10 +21,10 @@ static int cmd_led(int argc, char *argv[])
     }
 
     if (strcmp(argv[1], "on") == 0) {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+        log_ctrl(LED_ON);
     }
     else if (strcmp(argv[1], "off") == 0) {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+        log_ctrl(LED_OFF);
     }
     else {
         log_printf("Invalid parameter. Use 'on' or 'off'\r\n");

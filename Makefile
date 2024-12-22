@@ -44,26 +44,27 @@ Core/Src/cli.c \
 Core/Src/cli_commands.c \
 Core/Src/stm32f1xx_it.c \
 Core/Src/stm32f1xx_hal_msp.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_dma.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pwr.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash_ex.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_usart.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c  
+
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_dma.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pwr.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash_ex.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
+# Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_usart.c \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -114,9 +115,9 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DUSE_HAL_DRIVER \
 -DSTM32F103x6 \
--DUSE_FULL_LL_DRIVER
+-DUSE_FULL_LL_DRIVER \
+# -DUSE_HAL_DRIVER \
 
 # AS includes
 AS_INCLUDES = 

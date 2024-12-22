@@ -3,6 +3,7 @@
 #include "log.h"
 #include <stdint.h>
 #include <string.h>
+#include <stddef.h>
 
 #define CLI_MAX_COMMANDS    20
 #define CLI_BUF_SIZE        128

@@ -26,7 +26,6 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -36,7 +35,14 @@ extern "C" {
 
 /* USER CODE END Private defines */
 
+typedef enum {
+  LED_OFF,
+  LED_ON,
+} led_state;
+
 void MX_GPIO_Init(void);
+
+int log_ctrl(led_state state);
 
 /* USER CODE BEGIN Prototypes */
 

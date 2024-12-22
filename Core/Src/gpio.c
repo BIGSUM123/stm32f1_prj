@@ -20,6 +20,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
+#include "stm32f103x6.h"
+#include "stm32f1xx_ll_gpio.h"
+#include "stm32f1xx_ll_bus.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -41,25 +44,38 @@
 */
 void MX_GPIO_Init(void)
 {
+  LL_GPIO_InitTypeDef led_init;
 
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
 
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
+  led_init.Pin = LL_GPIO_PIN_13;
+  led_init.Mode = LL_GPIO_MODE_OUTPUT;
+  led_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  led_init.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  LL_GPIO_Init(GPIOC, &led_init);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
+  LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }
 
 /* USER CODE BEGIN 2 */
+
+int log_ctrl(led_state state)
+{
+  switch (state) {
+  case LED_OFF:
+    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+    break;
+
+  case LED_ON:
+    LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
+    break;
+
+  default:
+    return -1;
+    break;
+  }
+
+  return 0;
+}
 
 /* USER CODE END 2 */

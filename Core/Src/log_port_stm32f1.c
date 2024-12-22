@@ -1,6 +1,6 @@
 #include "log_port.h"
+#include <stddef.h>
 #include <stdint.h>
-#include "stm32f103x6.h"
 #include "stm32f1xx.h"
 #include "stm32f1xx_ll_usart.h"
 #include "stm32f1xx_ll_gpio.h"
@@ -69,7 +69,8 @@ void log_port_write(const char *data, uint16_t len)
 
 uint32_t log_port_get_time(void)
 {
-    return HAL_GetTick();
+    // return HAL_GetTick();
+    return 1;
 }
 
 int log_port_receive(uint8_t *data)
