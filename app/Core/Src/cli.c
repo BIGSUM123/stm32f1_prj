@@ -71,9 +71,11 @@ static void cli_process_command(char *cmd_line)
     for (int i = 0; i < CLI_MAX_COMMANDS; i++) {
         if (strcmp(argv[0], commands[i].cmd)  == 0) {
             commands[i].handler(argc, argv);
+            log_printf("CLI>");
             return;
         }
     }
 
     log_printf("Unknown command: %s\r\n", argv[0]);
+    log_printf("CLI>");
 }

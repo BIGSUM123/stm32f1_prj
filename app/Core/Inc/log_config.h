@@ -11,6 +11,6 @@
 #define LOG_SHOW_TIMESTAMP  0
 
 //! log是否显示文件和行号
-#define LOG_SHOW_FILE_LINE  1
+#define LOG_SHOW_FILE_LINE  0
 
 #endif // __LOG_CONFIG_H__
