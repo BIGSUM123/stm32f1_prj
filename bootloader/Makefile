@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = test
+TARGET = boot
 
 
 ######################################
@@ -36,22 +36,22 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+../components/log/log.c \
+../components/log/log_port_stm32f1.c \
+../components/cli/cli.c \
+../components/flash/flash.c \
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
+../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
 Core/Src/main.c \
 Core/Src/gpio.c \
-Core/Src/log.c \
-Core/Src/log_port_stm32f1.c \
-Core/Src/cli.c \
 Core/Src/cli_commands.c \
-Core/Src/stm32f1xx_it.c \
-Core/Src/stm32f1xx_hal_msp.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
-Core/Src/flash.c \
-Core/Src/boot.c
+Core/Src/boot.c \
+Core/Src/stm32f1xx_it.c \
+Core/Src/stm32f1xx_hal_msp.c \
 
 # Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 # Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
@@ -127,10 +127,13 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
--IDrivers/STM32F1xx_HAL_Driver/Inc \
--IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy \
--IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
--IDrivers/CMSIS/Include
+-I../components/include/cli \
+-I../components/include/log \
+-I../components/include/flash \
+-I../Drivers/STM32F1xx_HAL_Driver/Inc \
+-I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy \
+-I../Drivers/CMSIS/Device/ST/STM32F1xx/Include \
+-I../Drivers/CMSIS/Include
 
 
 # compile gcc flags
