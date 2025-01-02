@@ -1,26 +1,11 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR ARM)
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-find_program(ARM_GCC arm-none-eabi-gcc.exe)
-get_filename_component(TOOLCHAIN_PATH ${ARM_GCC} DIRECTORY)
-
-set(CMAKE_C_COMPILER ${TOOLCHAIN_PATH}/arm-none-eabi-gcc.exe)
-set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
-set(CMAKE_OBJCOPY ${TOOLCHAIN_PATH}/arm-none-eabi-objcopy.exe)
-set(CMAKE_SIZE ${TOOLCHAIN_PATH}/arm-none-eabi-size.exe)
+# 加载工具链配置
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/arm-none-eabi.cmake)
 
 project(stm32_project C ASM)
 
-set(CPU_FLAGS "-mcpu=cortex-m3 -mthumb")
-set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections")
-
-set(CMAKE_C_FLAGS "${COMMON_FLAGS}")
-set(CMAKE_ASM_FLAGS "${COMMON_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CPU_FLAGS} -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections")
-
+# 添加编译宏定义
 add_compile_definitions(
     STM32F103x6
     USE_FULL_LL_DRIVER

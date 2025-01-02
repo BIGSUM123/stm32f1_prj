@@ -1,4 +1,6 @@
 CompileFlags:
+  CompilationDatabase: build
+
   Add:
     # 标准库头文件路径
     - -I"D:/Arm GNU Toolchain arm-none-eabi/13.3 rel1/arm-none-eabi/include"
