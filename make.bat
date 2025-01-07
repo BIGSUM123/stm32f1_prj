@@ -21,8 +21,8 @@ goto :eof
 :done_parsing
 if not exist build mkdir build
 cd build
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
-make %TARGET%
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G Ninja -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+ninja %TARGET%
 cd ..
 
 :eof
