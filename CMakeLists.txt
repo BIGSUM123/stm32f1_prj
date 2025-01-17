@@ -11,7 +11,7 @@ add_compile_definitions(
     USE_FULL_LL_DRIVER
 )
 
-add_subdirectory(Drivers)
+add_subdirectory(modules)
 add_subdirectory(components)
 add_subdirectory(app)
 add_subdirectory(bootloader)

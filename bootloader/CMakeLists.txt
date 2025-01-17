@@ -16,7 +16,7 @@ target_include_directories(bootloader PRIVATE
 
 target_link_libraries(bootloader PRIVATE
     components
-    stm32f1_drivers
+    stm32f1_module
 )
 
 target_link_options(bootloader PRIVATE
