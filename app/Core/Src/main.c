@@ -69,7 +69,7 @@ struct device {
 };
 
 const struct device dev_test = {
-    .name = "test_dev",
+    .name = "test device",
     .api = (void *)0,
 };
 
