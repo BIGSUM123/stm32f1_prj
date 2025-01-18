@@ -102,6 +102,15 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  device_area :
+  {
+    . = ALIGN(4);
+    _device_list_start = .;
+    KEEP (*(.device_test))
+    _device_list_end = .;
+    . = ALIGN(4);
+  } >FLASH
+
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
     __exidx_start = .;
