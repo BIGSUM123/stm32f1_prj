@@ -42,7 +42,7 @@ typedef enum {
 
 void MX_GPIO_Init(void);
 
-int log_ctrl(led_state state);
+int led_ctrl(led_state state);
 
 /* USER CODE BEGIN Prototypes */
 

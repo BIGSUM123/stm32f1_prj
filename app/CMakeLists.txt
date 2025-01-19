@@ -11,6 +11,7 @@ add_executable(app
 
 target_include_directories(app PRIVATE
     Core/Inc
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/components/include/cli
     ${CMAKE_SOURCE_DIR}/components/include/log
     ${CMAKE_SOURCE_DIR}/components/include/flash

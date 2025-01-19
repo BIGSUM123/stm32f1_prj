@@ -24,10 +24,10 @@ static int cmd_led(int argc, char *argv[])
     }
 
     if (strcmp(argv[1], "on") == 0) {
-        log_ctrl(LED_ON);
+        led_ctrl(LED_ON);
     }
     else if (strcmp(argv[1], "off") == 0) {
-        log_ctrl(LED_OFF);
+        led_ctrl(LED_OFF);
     }
     else {
         log_printf("Invalid parameter. Use 'on' or 'off'\r\n");

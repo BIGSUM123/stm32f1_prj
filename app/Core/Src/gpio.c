@@ -59,7 +59,7 @@ void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 2 */
 
-int log_ctrl(led_state state)
+int led_ctrl(led_state state)
 {
   switch (state) {
   case LED_OFF:
