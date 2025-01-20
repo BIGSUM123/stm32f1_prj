@@ -82,8 +82,3 @@ DEVICE_DEFINE(gpioc, "gpioc",     \
               1,                \
               &gpio_stm32_api,       \
               &stm32_state);
-
-__attribute__((section("._device_obj"), used)) static device_t my_dev = {
-    .name = "my_device",
-    .api = (void *)0,
-};

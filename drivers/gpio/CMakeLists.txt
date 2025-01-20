@@ -1,5 +1,5 @@
 target_sources(drivers
-    PRIVATE
+    PUBLIC
         gpio_stm32f1.c
 )
 
