@@ -20,6 +20,7 @@ target_include_directories(app PRIVATE
 target_link_libraries(app PRIVATE
     components
     stm32f1_module
+    drivers
 )
 
 # Link options

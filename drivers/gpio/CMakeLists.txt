@@ -6,8 +6,8 @@ target_sources(drivers
 # STM32 相关的包含路径
 target_include_directories(drivers
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/modules/CMSIS/Device/ST/STM32F1xx/Include
         ${CMAKE_SOURCE_DIR}/modules/CMSIS/Include
+        ${CMAKE_SOURCE_DIR}/modules/CMSIS/Device/ST/STM32F1xx/Include
         ${CMAKE_SOURCE_DIR}/modules/STM32F1xx_HAL_Driver/Inc
         ${CMAKE_SOURCE_DIR}/modules/STM32F1xx_HAL_Driver/Inc/Legacy
 )

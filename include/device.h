@@ -79,4 +79,12 @@ typedef struct device {
     void *data;
 } device_t;
 
+/**
+ * @brief 
+ * 
+ * @param name 
+ * @return const device_t * 
+ */
+const device_t *device_get_binding(const char *name);
+
 #endif // __DEVICE_H__

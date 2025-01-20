@@ -9,5 +9,4 @@ add_subdirectory(uart)
 target_include_directories(drivers 
     PUBLIC 
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/include/drivers
 )

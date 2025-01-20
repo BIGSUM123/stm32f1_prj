@@ -79,9 +79,27 @@ SECTIONS
   device_area :
   {
     . = ALIGN(4);
-    _device_list_start = .;
+    _device_start = .;
+    KEEP (*(._device_obj))
+    _device_end = .;
+    . = ALIGN(4);
+  } >FLASH
+
+  init_fn :
+  {
+    . = ALIGN(4);
+    init_fn_start = .;
+    KEEP (*(._init_fn))
+    init_fn_end = .;
+    . = ALIGN(4);
+  } >FLASH
+
+  test_device_area :
+  {
+    . = ALIGN(4);
+    _test_device_start = .;
     KEEP (*(.device_test))
-    _device_list_end = .;
+    _test_device_end = .;
     . = ALIGN(4);
   } >FLASH
 

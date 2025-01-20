@@ -28,6 +28,7 @@
 #include "stm32f1xx_ll_system.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_cortex.h"
+#include "device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -63,28 +64,22 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-struct device {
-    char *name;
-    void *api;
-};
 
-const struct device dev_test = {
-    .name = "test device",
+__attribute__((section(".device_test"), used)) static device_t test_dev = {
+    .name = "test_device",
     .api = (void *)0,
 };
 
-__attribute__((section(".device_test"))) const struct device *dev = &dev_test;
 /* USER CODE END 0 */
 
-extern const struct device *_device_list_start[];
-extern const struct device *_device_list_end[];
+extern const device_t _test_device_start[];
+extern const device_t _test_device_end[];
 
 void device_init_all(void)
 {
-    const struct device **dev_ptr;
+    const device_t *dev;
     
-    for (dev_ptr = _device_list_start; dev_ptr < _device_list_end; dev_ptr++) {
-        const struct device *dev = *dev_ptr;
+    for (dev = _test_device_start; dev < _test_device_end; dev++) {
         // 在这里可以调用设备的初始化函数
         LOG_INFO("Found device: %s\n", dev->name);
     }

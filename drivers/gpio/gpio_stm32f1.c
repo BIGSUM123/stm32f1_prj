@@ -27,12 +27,14 @@ int gpio_stm32_config(const device_t *port,
 int gpio_stm32_set_bit_raw(const device_t *port,
                            gpio_port_pins_t pins)
 {
+    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
     return 0;
 }
 
 int gpio_stm32_clear_bit_raw(const device_t *port,
                              gpio_port_pins_t pins)
 {
+    LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
     return 0;
 }
 
@@ -80,3 +82,8 @@ DEVICE_DEFINE(gpioc, "gpioc",     \
               1,                \
               &gpio_stm32_api,       \
               &stm32_state);
+
+__attribute__((section("._device_obj"), used)) static device_t my_dev = {
+    .name = "my_device",
+    .api = (void *)0,
+};
