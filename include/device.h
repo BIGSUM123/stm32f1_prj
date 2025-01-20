@@ -8,10 +8,10 @@
 #define CONCAT(x, y) _CONCAT(x, y)
 
 #define INIT_ENTRY_SECTION      \
-    __attribute__((section("._init_fn")))
+    __attribute__((section("._init_fn"), used))
 
 #define DEVICE_SECTION_NAME         \
-    __attribute__((section("._device_obj")))
+    __attribute__((section("._device_obj"), used))
 
 #define DEVICE_NAME_GET(dev_id) 
 
@@ -32,7 +32,7 @@
                 prio, api, state)                           \
                                                 \
     DEVICE_SECTION_NAME                     \
-    static device_t CONCAT(_device_, name) =               \
+    static device_t CONCAT(_device_, dev_id) =               \
     DEVICE_INIT(name, pm, data, config, api, state)
 
 /**
@@ -43,8 +43,8 @@
                 level, prio)                \
                                                 \
     const static INIT_ENTRY_SECTION                 \
-    init_entry_t __init_fn_##_dev_id = {         \
-        .inif_fn = _init_fn,                    \
+    init_entry_t CONCAT(__init_fn_, _dev_id) = {         \
+        .init_fn = _init_fn,                    \
     }
 
 /**

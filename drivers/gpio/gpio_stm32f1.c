@@ -20,6 +20,8 @@ int gpio_stm32_config(const device_t *port,
     LL_GPIO_Init(GPIOC, &led_init);
 
     LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+
+    return 0;
 }
 
 int gpio_stm32_set_bit_raw(const device_t *port,
@@ -69,10 +71,10 @@ struct gpio_driver_data stm32_data;
 struct gpio_driver_config stm32_config;
 device_state_t stm32_state;
 
-DEVICE_DEFINE("GPIOC", "GPIOCe",     \
+DEVICE_DEFINE(gpioc, "gpioc",     \
               &gpio_stm32_init,        \
               NULL,                \
-              &gpio_stm32_data,         \
+              &stm32_data,         \
               &stm32_config,        \
               1,                \
               1,                \

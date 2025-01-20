@@ -76,6 +76,15 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  device_area :
+  {
+    . = ALIGN(4);
+    _device_list_start = .;
+    KEEP (*(.device_test))
+    _device_list_end = .;
+    . = ALIGN(4);
+  } >FLASH
+
   /* The program code and other data goes into FLASH */
   .text :
   {
@@ -102,15 +111,6 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
-  device_area :
-  {
-    . = ALIGN(4);
-    _device_list_start = .;
-    KEEP (*(.device_test))
-    _device_list_end = .;
-    . = ALIGN(4);
-  } >FLASH
-
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
     __exidx_start = .;
@@ -124,6 +124,7 @@ SECTIONS
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
   } >FLASH
+
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
@@ -131,6 +132,7 @@ SECTIONS
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
   } >FLASH
+
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);

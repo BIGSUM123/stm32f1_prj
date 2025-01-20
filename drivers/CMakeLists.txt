@@ -1,4 +1,6 @@
-add_library(drivers STATIC)
+add_library(drivers STATIC
+    device.c
+)
 
 add_subdirectory(flash)
 add_subdirectory(gpio)
