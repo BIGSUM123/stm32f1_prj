@@ -20,9 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
-#include "stm32f103x6.h"
-#include "stm32f1xx_ll_gpio.h"
-#include "stm32f1xx_ll_bus.h"
 #include "device.h"
 #include "drivers/gpio.h"
 
@@ -46,19 +43,8 @@ const device_t *gpioc;
 */
 void MX_GPIO_Init(void)
 {
-  LL_GPIO_InitTypeDef led_init;
-
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
-
-  led_init.Pin = LL_GPIO_PIN_13;
-  led_init.Mode = LL_GPIO_MODE_OUTPUT;
-  led_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-  led_init.Speed = LL_GPIO_SPEED_FREQ_LOW;
-  LL_GPIO_Init(GPIOC, &led_init);
-
-  LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
-
   gpioc = device_get_binding("gpioc");
+  gpio_pin_configure(gpioc, 13, 0);
 }
 
 /* USER CODE BEGIN 2 */
