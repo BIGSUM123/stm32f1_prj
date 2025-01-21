@@ -210,6 +210,33 @@ typedef uint8_t gpio_pin_t;
  */
 typedef uint32_t gpio_flags_t;
 
+/**
+ * This structure is common to all GPIO drivers and is expected to be
+ * the first element in the object pointed to by the config field
+ * in the device structure.
+ */
+struct gpio_driver_config {
+	/** Mask identifying pins supported by the controller.
+	 *
+	 * Initialization of this mask is the responsibility of device
+	 * instance generation in the driver.
+	 */
+	gpio_port_pins_t port_pin_mask;
+};
+
+/**
+ * This structure is common to all GPIO drivers and is expected to be the first
+ * element in the driver's struct driver_data declaration.
+ */
+struct gpio_driver_data {
+	/** Mask identifying pins that are configured as active low.
+	 *
+	 * Management of this mask is the responsibility of the
+	 * wrapper functions in this header.
+	 */
+	gpio_port_pins_t invert;
+};
+
 typedef struct gpio_driver_api {
     int (*pin_config)(const device_t *port,
                       gpio_pin_t pin,

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define BIT(n)  (1U << n)
+
 #define _CONCAT(x, y) x##y
 #define CONCAT(x, y) _CONCAT(x, y)
 

@@ -4,10 +4,11 @@
 #include "stm32f103x6.h"
 #include "stm32f1xx_ll_gpio.h"
 #include "stm32f1xx_ll_bus.h"
+#include "gpio_stm32f1.h"
 
-int gpio_stm32_config(const device_t *port,
-                      gpio_pin_t pin,
-                      gpio_flags_t flags)
+static int gpio_stm32_config(const device_t *port,
+                             gpio_pin_t pin,
+                             gpio_flags_t flags)
 {
     LL_GPIO_InitTypeDef led_init;
 
@@ -24,14 +25,14 @@ int gpio_stm32_config(const device_t *port,
     return 0;
 }
 
-int gpio_stm32_set_bit_raw(const device_t *port,
+static int gpio_stm32_set_bit_raw(const device_t *port,
                            gpio_port_pins_t pins)
 {
     LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
     return 0;
 }
 
-int gpio_stm32_clear_bit_raw(const device_t *port,
+static int gpio_stm32_clear_bit_raw(const device_t *port,
                              gpio_port_pins_t pins)
 {
     LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
@@ -61,24 +62,28 @@ gpio_driver_api_t gpio_stm32_api = {
     .port_clear_bit_raw = &gpio_stm32_clear_bit_raw,
 };
 
-struct gpio_driver_data {
-    int a;
-};
+#define GPIO_DEVICE_DEFINE(__suffix, __SUFFIX)        \
+    static const struct gpio_stm32_config gpio_stm32_cfg_##__suffix = { \
+        .common = {                 \
+            .port_pin_mask = BIT(13),                   \
+        },                                          \
+        .base = (uint32_t *)__SUFFIX,              \
+        .port = 1,                          \
+    };                               \
+    static struct gpio_stm32_data gpio_stm32_data_##__suffix;       \
+    static device_state_t gpio_stm32_state_##__suffix;          \
+    DEVICE_DEFINE(                                  \
+        __suffix, #__suffix,                  \
+        &gpio_stm32_init,                \
+        NULL,                               \
+        &gpio_stm32_data_##__suffix,            \
+        &gpio_stm32_cfg_##__suffix,          \
+        1, 1,                                       \
+        &gpio_stm32_api,                \
+        &gpio_stm32_state_##__suffix             \
+    )
 
-struct gpio_driver_config {
-    int a;
-};
+#define GPIO_DEVICE_DEFINE_STM32(__suffix, __SUFFIX)        \
+    GPIO_DEVICE_DEFINE(gpio##__suffix, GPIO##__SUFFIX)
 
-struct gpio_driver_data stm32_data;
-struct gpio_driver_config stm32_config;
-device_state_t stm32_state;
-
-DEVICE_DEFINE(gpioc, "gpioc",     \
-              &gpio_stm32_init,        \
-              NULL,                \
-              &stm32_data,         \
-              &stm32_config,        \
-              1,                \
-              1,                \
-              &gpio_stm32_api,       \
-              &stm32_state);
+GPIO_DEVICE_DEFINE_STM32(c, C);
