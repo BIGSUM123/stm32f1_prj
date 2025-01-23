@@ -14,7 +14,7 @@ set(CMAKE_SIZE ${TOOLCHAIN_PATH}/arm-none-eabi-size.exe)
 
 # MCU 标志
 set(CPU_FLAGS "-mcpu=cortex-m3 -mthumb")
-set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections")
+set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections -std=c99")
 
 # 编译标志
 set(CMAKE_C_FLAGS "${COMMON_FLAGS}" CACHE STRING "C compiler flags")
