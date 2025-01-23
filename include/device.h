@@ -34,7 +34,7 @@
                 prio, api, state)                           \
                                                 \
     DEVICE_SECTION_NAME                     \
-    static device_t CONCAT(_device_, dev_id) =               \
+    static struct device CONCAT(_device_, dev_id) =               \
     DEVICE_INIT(name, pm, data, config, api, state)
 
 /**
@@ -45,7 +45,7 @@
                 level, prio)                \
                                                 \
     const static INIT_ENTRY_SECTION                 \
-    init_entry_t CONCAT(__init_fn_, _dev_id) = {         \
+    struct init_entry CONCAT(__init_fn_, _dev_id) = {   \
         .init_fn = _init_fn,                    \
     }
 
@@ -64,29 +64,29 @@
     DEVICE_INIT_ENTRY_DEFINE(dev_id,            \
                 init_fn, level, prio)                 \
 
-typedef struct init_entry {
+struct init_entry {
     int (*init_fn)(void);
-} init_entry_t;
+};
 
 typedef struct device_state {
     uint8_t init_res;
     bool initialized : 1;
 } device_state_t;
 
-typedef struct device {
+struct device {
     const char *name;
     const void *config;
     const void *api;
     device_state_t *state;
     void *data;
-} device_t;
+};
 
 /**
  * @brief 
  * 
  * @param name 
- * @return const device_t * 
+ * @return const struct device * 
  */
-const device_t *device_get_binding(const char *name);
+const struct device *device_get_binding(const char *name);
 
 #endif // __DEVICE_H__

@@ -6,7 +6,7 @@
 #include "stm32f1xx_ll_bus.h"
 #include "gpio_stm32f1.h"
 
-static int gpio_stm32_config(const device_t *port,
+static int gpio_stm32_config(const struct device *port,
                              gpio_pin_t pin,
                              gpio_flags_t flags)
 {
@@ -25,14 +25,14 @@ static int gpio_stm32_config(const device_t *port,
     return 0;
 }
 
-static int gpio_stm32_set_bit_raw(const device_t *port,
+static int gpio_stm32_set_bit_raw(const struct device *port,
                            gpio_port_pins_t pins)
 {
     LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
     return 0;
 }
 
-static int gpio_stm32_clear_bit_raw(const device_t *port,
+static int gpio_stm32_clear_bit_raw(const struct device *port,
                              gpio_port_pins_t pins)
 {
     LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);

@@ -65,19 +65,20 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// __attribute__((section(".device_test"), used)) static device_t test_dev = {
+// __attribute__((section(".device_test"), used))
+// static struct device test_dev = {
 //     .name = "test_device",
 //     .api = (void *)0,
 // };
 
 // /* USER CODE END 0 */
 
-// extern const device_t _test_device_start[];
-// extern const device_t _test_device_end[];
+// extern const struct device _test_device_start[];
+// extern const struct device _test_device_end[];
 
 // void device_init_all(void)
 // {
-//     const device_t *dev;
+//     const struct device *dev;
     
 //     for (dev = _test_device_start; dev < _test_device_end; dev++) {
 //         // 在这里可以调用设备的初始化函数

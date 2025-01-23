@@ -238,14 +238,14 @@ struct gpio_driver_data {
 };
 
 typedef struct gpio_driver_api {
-    int (*pin_config)(const device_t *port,
+    int (*pin_config)(const struct device *port,
                       gpio_pin_t pin,
                       gpio_flags_t flags);
 
-    int (*port_set_bit_raw)(const device_t *port,
+    int (*port_set_bit_raw)(const struct device *port,
                             gpio_port_pins_t pins);
 
-    int (*port_clear_bit_raw)(const device_t *port,
+    int (*port_clear_bit_raw)(const struct device *port,
                               gpio_port_pins_t pins);
 } gpio_driver_api_t;
 
@@ -264,7 +264,7 @@ typedef struct gpio_driver_api {
  * @retval -EIO I/O error when accessing an external GPIO chip.
  * @retval -EWOULDBLOCK if operation would block.
  */
-static inline int gpio_pin_configure(const device_t *port,
+static inline int gpio_pin_configure(const struct device *port,
                                      gpio_pin_t pin,
                                      gpio_flags_t flags)
 {
@@ -294,7 +294,7 @@ static inline int gpio_pin_configure(const device_t *port,
  * @retval -EIO I/O error when accessing an external GPIO chip.
  * @retval -EWOULDBLOCK if operation would block.
  */
-static inline int gpio_pin_set_raw(const device_t *port,
+static inline int gpio_pin_set_raw(const struct device *port,
                                    gpio_pin_t pin,
                                    int value)
 {

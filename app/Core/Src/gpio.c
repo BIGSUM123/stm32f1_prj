@@ -31,7 +31,7 @@
 /* Configure GPIO                                                             */
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
-const device_t *gpioc;
+const struct device *gpioc;
 /* USER CODE END 1 */
 
 /** Configure pins as

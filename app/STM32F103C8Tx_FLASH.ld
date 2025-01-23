@@ -61,8 +61,8 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-FLASH (rx)      : ORIGIN = 0x8004000, LENGTH = 48K  /* 改为从 16K 开始，总长度改为 48K */
+  RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
+  FLASH (rx)      : ORIGIN = 0x8004000, LENGTH = 48K  /* 改为从 16K 开始，总长度改为 48K */
 }
 
 /* Define output sections */
@@ -79,18 +79,18 @@ SECTIONS
   device_area :
   {
     . = ALIGN(4);
-    _device_start = .;
+    _device_list_start = .;
     KEEP (*(._device_obj))
-    _device_end = .;
+    _device_list_end = .;
     . = ALIGN(4);
   } >FLASH
 
   init_fn :
   {
     . = ALIGN(4);
-    init_fn_start = .;
+    _init_fn_start = .;
     KEEP (*(._init_fn))
-    init_fn_end = .;
+    _init_fn_end = .;
     . = ALIGN(4);
   } >FLASH
 
