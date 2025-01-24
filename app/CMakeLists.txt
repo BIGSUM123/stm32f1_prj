@@ -6,7 +6,9 @@ add_executable(app
     Core/Src/system_stm32f1xx.c
     Core/Src/sysmem.c
     Core/Src/syscalls.c
-    ../arch/arm/reset.s
+    ${CMAKE_SOURCE_DIR}/arch/arm/reset.s
+    ${CMAKE_SOURCE_DIR}/arch/arm/vector_table.s
+    ${CMAKE_SOURCE_DIR}/arch/arm/fault_s.s
 )
 
 target_include_directories(app PRIVATE

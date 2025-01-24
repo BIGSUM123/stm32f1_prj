@@ -21,6 +21,9 @@ set(CMAKE_C_FLAGS "${COMMON_FLAGS}" CACHE STRING "C compiler flags")
 set(CMAKE_ASM_FLAGS "${COMMON_FLAGS}" CACHE STRING "ASM compiler flags")
 set(CMAKE_EXE_LINKER_FLAGS "${CPU_FLAGS} -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections" CACHE STRING "Linker flags")
 
+# 修改汇编编译器的默认行为
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+
 # 寻找库和头文件设置
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
