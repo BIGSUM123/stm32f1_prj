@@ -39,9 +39,9 @@ int cli_register_command(const cli_command_t *command)
 
 int cli_process_char(char ch)
 {
-    if (ch == '\r' || ch == '\n') {
-        log_printf("\r\n");
+    if ((ch == '\r' || ch == '\n')) {
         if (cli_buf_index > 0) {
+            log_printf("\r\n");
             cli_buf[cli_buf_index] = '\0';
             cli_process_command(cli_buf);
             cli_buf_index = 0;

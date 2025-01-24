@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "boot.h"
 #include "cli.h"
 #include "cli_commands.h"
 #include "gpio.h"
@@ -77,6 +78,14 @@ int main(void)
     SystemClock_Config();
     MX_GPIO_Init();
     log_init();
+
+    if (boot_check_app() == 0) {
+        LOG_INFO("Jumping to application...");
+        boot_jump_to_app();
+    } else {
+        LOG_INFO(" App Status: Invaild");
+    }
+
     cli_init();
     cli_register_basic_commands();
 
