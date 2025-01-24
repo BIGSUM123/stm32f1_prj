@@ -3,14 +3,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "init.h"
 
 #define BIT(n)  (1U << n)
 
 #define _CONCAT(x, y) x##y
 #define CONCAT(x, y) _CONCAT(x, y)
-
-#define INIT_ENTRY_SECTION      \
-    __attribute__((section("._init_fn"), used))
 
 #define DEVICE_SECTION_NAME         \
     __attribute__((section("._device_obj"), used))
@@ -46,7 +44,10 @@
                                                 \
     const static INIT_ENTRY_SECTION                 \
     struct init_entry CONCAT(__init_fn_, _dev_id) = {   \
-        .init_fn = _init_fn,                    \
+        .init_fn = {                            \
+            .dev = _init_fn,                       \
+        },                    \
+        .dev = &CONCAT(_device_, _dev_id),                 \
     }
 
 /**
@@ -63,10 +64,6 @@
                                                         \
     DEVICE_INIT_ENTRY_DEFINE(dev_id,            \
                 init_fn, level, prio)                 \
-
-struct init_entry {
-    int (*init_fn)(void);
-};
 
 typedef struct device_state {
     uint8_t init_res;

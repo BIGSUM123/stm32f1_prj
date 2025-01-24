@@ -28,7 +28,6 @@
 #include "stm32f1xx_ll_system.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_cortex.h"
-#include "device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

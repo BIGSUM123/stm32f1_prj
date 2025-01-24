@@ -23,7 +23,11 @@ defined in linker script */
 .section .text.w_arm_reset
     .type w_arm_reset, %function
 
+.section .text.__start
+    .type __start, %function
+
 w_arm_reset:
+__start:
 /* Copy the data segment initializers from flash to SRAM */
     ldr r0, =_sdata
     ldr r1, =_edata

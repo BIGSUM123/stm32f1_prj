@@ -39,7 +39,7 @@ static int gpio_stm32_clear_bit_raw(const struct device *port,
     return 0;
 }
 
-int gpio_stm32_init()
+int gpio_stm32_init(const struct device *dev)
 {
     LL_GPIO_InitTypeDef led_init;
 

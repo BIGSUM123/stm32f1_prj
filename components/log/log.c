@@ -3,7 +3,6 @@
 #include "log_port.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <string.h>
 
 static const char *level_strings[] = {
     "NONE",
