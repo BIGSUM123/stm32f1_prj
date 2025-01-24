@@ -6,7 +6,7 @@ add_executable(app
     Core/Src/system_stm32f1xx.c
     Core/Src/sysmem.c
     Core/Src/syscalls.c
-    startup_stm32f103xb.s
+    ../arch/arm/reset.s
 )
 
 target_include_directories(app PRIVATE
