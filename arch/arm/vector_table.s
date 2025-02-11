@@ -1,9 +1,9 @@
 #include "vector_table.h"
 
-.syntax unified
-.cpu cortex-m3
-.fpu softvfp
-.thumb
+    .syntax unified
+    .cpu cortex-m3
+    .fpu softvfp
+    .thumb
 
 .section .isr_vector,"a",%progbits
     .type _vector_table, %object

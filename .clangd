@@ -3,7 +3,7 @@ CompileFlags:
 
   Add:
     # 标准库头文件路径
-    - "-isystemE:/13.3 rel1/arm-none-eabi/include" # 包含头文件, 绝对路径
+    - "-isystemD:/Arm GNU Toolchain arm-none-eabi/13.3 rel1/arm-none-eabi/include" # 包含头文件, 绝对路径
 
 
 # # 最顶层包含几个主要部分：If, CompileFlags, Diagnostics, InlayHints, Completion, 和 SemanticTokens

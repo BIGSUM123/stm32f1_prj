@@ -3,6 +3,9 @@
 
 #define PERFOPT_ALIGN .balign  4
 
+#define FUNC_CODE() .thumb;
+#define FUNC_INSTR(a)
+
 #define GTEXT(sym) .global sym; .type sym, %function
 #define GDATA(sym) .global sym; .type sym, %object
 #define WTEXT(sym) .weak sym; .type sym, %function

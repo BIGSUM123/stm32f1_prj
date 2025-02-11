@@ -9,6 +9,7 @@ add_executable(app
     ${CMAKE_SOURCE_DIR}/arch/arm/reset.s
     ${CMAKE_SOURCE_DIR}/arch/arm/vector_table.s
     ${CMAKE_SOURCE_DIR}/arch/arm/fault_s.s
+    ${CMAKE_SOURCE_DIR}/arch/arm/swap_helper.s
 )
 
 target_include_directories(app PRIVATE

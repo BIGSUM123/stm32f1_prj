@@ -10,17 +10,17 @@ static int gpio_stm32_config(const struct device *port,
                              gpio_pin_t pin,
                              gpio_flags_t flags)
 {
-    LL_GPIO_InitTypeDef led_init;
+    // LL_GPIO_InitTypeDef led_init;
 
-    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
+    // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
 
-    led_init.Pin = LL_GPIO_PIN_13;
-    led_init.Mode = LL_GPIO_MODE_OUTPUT;
-    led_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    led_init.Speed = LL_GPIO_SPEED_FREQ_LOW;
-    LL_GPIO_Init(GPIOC, &led_init);
+    // led_init.Pin = LL_GPIO_PIN_13;
+    // led_init.Mode = LL_GPIO_MODE_OUTPUT;
+    // led_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    // led_init.Speed = LL_GPIO_SPEED_FREQ_LOW;
+    // LL_GPIO_Init(GPIOC, &led_init);
 
-    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+    // LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
 
     return 0;
 }

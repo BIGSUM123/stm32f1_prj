@@ -1,9 +1,9 @@
 #include "vector_table.h"
 
-.syntax unified
-.cpu cortex-m3
-.fpu softvfp
-.thumb
+    .syntax unified
+    .cpu cortex-m3
+    .fpu softvfp
+    .thumb
 
 /* start address for the initialization values of the .data section.
 defined in linker script */

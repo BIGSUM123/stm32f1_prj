@@ -2,8 +2,11 @@
 #include "device.h"
 #include <stddef.h>
 
-extern const struct init_entry _init_fn_start[];
-extern const struct init_entry _init_fn_end[];
+typedef struct {
+    uint32_t *stack_ptr;  // 栈指针必须是 TCB 的第一个成员
+} tcb_t;
+
+tcb_t *pxCurrentTCB;      // 当前任务指针
 
 static int do_device_init(const struct init_entry *entry)
 {
@@ -38,12 +41,14 @@ static int do_device_init(const struct init_entry *entry)
 
 static void sys_init_run()
 {
+	extern const struct init_entry _init_fn_start[];
+	extern const struct init_entry _init_fn_end[];
+
 	const struct init_entry *entry = NULL;
-    const struct device *dev = NULL;
     // int result = -1;
 
     for (entry = _init_fn_start; entry < _init_fn_end; entry++) {
-        dev = entry->dev;
+        const struct device *dev = entry->dev;
 
         if (dev != NULL) {
 			do_device_init(entry);
