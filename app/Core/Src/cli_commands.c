@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "flash.h"
+#include "stm32f103x6.h"
 
 static int cmd_help(int argc, char *argv[])
 {
@@ -82,11 +83,21 @@ static int cmd_flash_test(int argc, char *argv[])
     return 0;
 }
 
+static int cmd_change(int argc, char *argv[])
+{
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+    __DSB();
+    __ISB();
+
+    return 0;
+}
+
 const static cli_command_t basic_commands[] = {
     {"help", "Show available commands", cmd_help},
     {"led", "Contrl led (on/off)", cmd_led},
     {"version", "Show firmware version", cmd_version},
-    {"flash_test", "Test flash operations", cmd_flash_test}
+    {"flash_test", "Test flash operations", cmd_flash_test},
+    {"change", "Change thread", cmd_change}
 };
 
 int cli_register_basic_commands()

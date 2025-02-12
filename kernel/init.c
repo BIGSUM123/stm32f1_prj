@@ -2,12 +2,6 @@
 #include "device.h"
 #include <stddef.h>
 
-typedef struct {
-    uint32_t *stack_ptr;  // 栈指针必须是 TCB 的第一个成员
-} tcb_t;
-
-tcb_t *pxCurrentTCB;      // 当前任务指针
-
 static int do_device_init(const struct init_entry *entry)
 {
     const struct device *dev = entry->dev;

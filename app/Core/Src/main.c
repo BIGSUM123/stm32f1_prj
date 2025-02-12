@@ -28,6 +28,7 @@
 #include "stm32f1xx_ll_system.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_cortex.h"
+#include "kernel.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,6 +86,83 @@ void SystemClock_Config(void);
 //     }
 // }
 
+void rtos_yield(void)
+{
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+    __DSB();
+    __ISB();
+}
+
+extern void start_first_thread();
+void thread1(void);
+void thread2(void);
+
+// 使用 __attribute__((aligned(8))) 强制栈数组 8 字节对齐
+uint32_t thread1_stack[1024 / 4] __attribute__((aligned(8)));
+uint32_t thread2_stack[1024 / 4] __attribute__((aligned(8)));
+
+tcb_t tcb1 = {
+    .stack_ptr = thread1_stack,
+};
+
+tcb_t tcb2 = {
+    .stack_ptr = thread2_stack,
+};
+
+tcb_t *pxCurrentTCB;      // 当前任务指针
+
+void w_scheduler()
+{
+    if (pxCurrentTCB == &tcb1)
+        pxCurrentTCB = &tcb2;
+    else
+        pxCurrentTCB = &tcb1;
+}
+
+// 栈初始化工具函数
+void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
+    // 确保栈起始地址 8 字节对齐
+    uint32_t *stack_base = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
+    
+    // 栈顶指针指向数组末尾（栈空间最高地址）
+    uint32_t *sp = stack_base + 1024/4; 
+    
+    // 预留硬件自动保存的 8 个字空间（向下生长）
+    sp -= 8; 
+    
+    // 按硬件压栈顺序初始化（高地址 → 低地址）
+    sp[0] = 0x01000000U;      // xPSR (Thumb 模式)
+    sp[1] = (uint32_t)entry;  // PC (线程入口地址)
+    sp[2] = 0xFFFFFFFFU;      // LR (无效返回地址)
+    sp[3] = 0x00000000U;      // R12
+    sp[4] = 0x00000000U;      // R3
+    sp[5] = 0x00000000U;      // R2
+    sp[6] = 0x00000000U;      // R1
+    sp[7] = 0x00000000U;      // R0
+    
+    // 更新 TCB 中的栈指针
+    tcb->stack_ptr = sp;
+}
+// void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
+//     uint32_t stack_size_words = 1024 / 4;   // 栈大小：256 个字
+//     // 让 sp 指向堆栈区域中预留出 8 个字的区域——即顶部的 8 个字
+//     // 注意：栈是向下生长的，所以数组末尾存放的是栈底（低地址），而我们希望 PSP 指向这 8 个字的起始地址。
+//     uint32_t *sp = &tcb->stack_ptr[stack_size_words - 8];
+
+//     // 按照硬件自动压栈后的内存布局（从 PSP 开始的连续 8 个字）写入：
+//     sp[0] = 0x00000000U;       // R0
+//     sp[1] = 0x00000000U;       // R1
+//     sp[2] = 0x00000000U;       // R2
+//     sp[3] = 0x00000000U;       // R3
+//     sp[4] = 0x00000000U;       // R12
+//     sp[5] = 0xFFFFFFFFU;       // LR（无效返回地址）
+//     sp[6] = (uint32_t)entry;   // PC（线程入口地址）
+//     sp[7] = 0x01000000U;       // xPSR（Thumb位必须为1）
+
+//     // 更新 TCB 中保存的栈指针，即 PSP 将指向这个区域的起始地址
+//     tcb->stack_ptr = sp;
+// }
+
 /**
  * @brief  The application entry point.
  * @retval int
@@ -102,6 +180,39 @@ int main(void)
     cli_init();
     cli_register_basic_commands();
 
+    // 初始化 PendSV 优先级
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+
+    // 初始化线程栈
+    thread_stack_init(&tcb1, thread1);
+    thread_stack_init(&tcb2, thread2);
+
+    pxCurrentTCB = &tcb1;
+
+    // 启用全局中断
+    __enable_irq();
+
+    // 触发首次上下文切换（手动跳转到线程1）
+    start_first_thread();
+
+    while (1);
+}
+
+
+void thread1(void)
+{
+    while (1)
+    {
+        uint8_t ch;
+        if (log_port_receive(&ch) == 1) {
+            cli_process_char(ch);
+        }
+    }
+}
+
+
+void thread2(void)
+{
     while (1)
     {
         uint8_t ch;
