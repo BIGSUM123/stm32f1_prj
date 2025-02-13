@@ -93,13 +93,12 @@ void rtos_yield(void)
     __ISB();
 }
 
-extern void start_first_thread();
 void thread1(void);
 void thread2(void);
 
 // 使用 __attribute__((aligned(8))) 强制栈数组 8 字节对齐
-uint32_t thread1_stack[1024 / 4] __attribute__((aligned(8)));
-uint32_t thread2_stack[1024 / 4] __attribute__((aligned(8)));
+uint32_t thread1_stack[256] __attribute__((aligned(8)));
+uint32_t thread2_stack[256] __attribute__((aligned(8)));
 
 tcb_t tcb1 = {
     .stack_ptr = thread1_stack,
@@ -121,27 +120,27 @@ void w_scheduler()
 
 // 栈初始化工具函数
 void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
-    // 确保栈起始地址 8 字节对齐
-    uint32_t *stack_base = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
+    // 栈起始地址（确保 8 字节对齐）
+    uint32_t *stack_start = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
     
-    // 栈顶指针指向数组末尾（栈空间最高地址）
-    uint32_t *sp = stack_base + 1024/4; 
+    // 栈顶指针指向数组末尾（最高地址）
+    uint32_t *sp = stack_start + (1024 / sizeof(uint32_t)); // 0x200008A0
     
     // 预留硬件自动保存的 8 个字空间（向下生长）
-    sp -= 8; 
+    sp -= 8;  // 此时 sp = 0x20000880
     
-    // 按硬件压栈顺序初始化（高地址 → 低地址）
-    sp[0] = 0x01000000U;      // xPSR (Thumb 模式)
-    sp[1] = (uint32_t)entry;  // PC (线程入口地址)
-    sp[2] = 0xFFFFFFFFU;      // LR (无效返回地址)
-    sp[3] = 0x00000000U;      // R12
-    sp[4] = 0x00000000U;      // R3
-    sp[5] = 0x00000000U;      // R2
-    sp[6] = 0x00000000U;      // R1
-    sp[7] = 0x00000000U;      // R0
+    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
+    sp[7] = 0x01000000U;      // xPSR (Thumb 模式)
+    sp[6] = (uint32_t)entry;   // PC (线程入口地址)
+    sp[5] = 0xFFFFFFFFU;      // LR (无效返回地址)
+    sp[4] = 0x00000000U;      // R12
+    sp[3] = 0x00000000U;      // R3
+    sp[2] = 0x00000000U;      // R2
+    sp[1] = 0x00000000U;      // R1
+    sp[0] = 0x00000000U;      // R0
     
-    // 更新 TCB 中的栈指针
-    tcb->stack_ptr = sp;
+    // 更新 TCB 中的栈指针（指向硬件帧起始地址）
+    tcb->stack_ptr = sp;  // 0x20000880
 }
 // void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
 //     uint32_t stack_size_words = 1024 / 4;   // 栈大小：256 个字
@@ -192,8 +191,11 @@ int main(void)
     // 启用全局中断
     __enable_irq();
 
-    // 触发首次上下文切换（手动跳转到线程1）
-    start_first_thread();
+    // 触发 SVC 中断来进行首次上下文切换
+    __asm("SVC #0");  // 调用 SVC 指令触发 SVC 异常
+    // // 触发首次上下文切换（手动跳转到线程1）
+    // extern void start_first_thread();
+    // start_first_thread();
 
     while (1);
 }
@@ -201,6 +203,18 @@ int main(void)
 
 void thread1(void)
 {
+    // 初始化 NVIC 优先级分组
+    NVIC_SetPriorityGrouping(0x00000003U);
+    SystemClock_Config();
+    MX_GPIO_Init();
+    log_init();
+
+    cli_init();
+    cli_register_basic_commands();
+
+    // 初始化 PendSV 优先级
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+
     while (1)
     {
         uint8_t ch;

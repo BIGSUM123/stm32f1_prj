@@ -27,9 +27,8 @@ SECTION_SUBSEC_FUNC(text,__fault,w_arm_exc_spurious)
  * 
  */
 GTEXT(w_arm_nmi)
-GTEXT(w_arm_svc)
 GTEXT(sys_clock_isr)
 
 SECTION_SUBSEC_FUNC(text,__fault,w_arm_nmi)
-SECTION_SUBSEC_FUNC(text,__fault,w_arm_svc)
 SECTION_SUBSEC_FUNC(text,__fault,sys_clock_isr)
+    bx lr
