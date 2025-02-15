@@ -65,27 +65,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// __attribute__((section(".device_test"), used))
-// static struct device test_dev = {
-//     .name = "test_device",
-//     .api = (void *)0,
-// };
-
-// /* USER CODE END 0 */
-
-// extern const struct device _test_device_start[];
-// extern const struct device _test_device_end[];
-
-// void device_init_all(void)
-// {
-//     const struct device *dev;
-    
-//     for (dev = _test_device_start; dev < _test_device_end; dev++) {
-//         // 在这里可以调用设备的初始化函数
-//         LOG_INFO("Found device: %s\n", dev->name);
-//     }
-// }
-
 void rtos_yield(void)
 {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
@@ -124,7 +103,7 @@ void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
     uint32_t *stack_start = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
     
     // 栈顶指针指向数组末尾（最高地址）
-    uint32_t *sp = stack_start + (1024 / sizeof(uint32_t)); // 0x200008A0
+    uint32_t *sp = stack_start + 256; // 0x200008A0
     
     // 预留硬件自动保存的 8 个字空间（向下生长）
     sp -= 8;  // 此时 sp = 0x20000880
@@ -132,7 +111,7 @@ void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
     // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
     sp[7] = 0x01000000U;      // xPSR (Thumb 模式)
     sp[6] = (uint32_t)entry;   // PC (线程入口地址)
-    sp[5] = 0xFFFFFFFFU;      // LR (无效返回地址)
+    sp[5] = 0xFFFFFFFDU;      // LR (无效返回地址)
     sp[4] = 0x00000000U;      // R12
     sp[3] = 0x00000000U;      // R3
     sp[2] = 0x00000000U;      // R2
@@ -141,26 +120,47 @@ void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
     
     // 更新 TCB 中的栈指针（指向硬件帧起始地址）
     tcb->stack_ptr = sp;  // 0x20000880
+    tcb->entry = entry;
 }
-// void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
-//     uint32_t stack_size_words = 1024 / 4;   // 栈大小：256 个字
-//     // 让 sp 指向堆栈区域中预留出 8 个字的区域——即顶部的 8 个字
-//     // 注意：栈是向下生长的，所以数组末尾存放的是栈底（低地址），而我们希望 PSP 指向这 8 个字的起始地址。
-//     uint32_t *sp = &tcb->stack_ptr[stack_size_words - 8];
 
-//     // 按照硬件自动压栈后的内存布局（从 PSP 开始的连续 8 个字）写入：
-//     sp[0] = 0x00000000U;       // R0
-//     sp[1] = 0x00000000U;       // R1
-//     sp[2] = 0x00000000U;       // R2
-//     sp[3] = 0x00000000U;       // R3
-//     sp[4] = 0x00000000U;       // R12
-//     sp[5] = 0xFFFFFFFFU;       // LR（无效返回地址）
-//     sp[6] = (uint32_t)entry;   // PC（线程入口地址）
-//     sp[7] = 0x01000000U;       // xPSR（Thumb位必须为1）
+// 栈初始化工具函数
+void thread_stack_second(tcb_t *tcb, void (*entry)(void)) {
+    // 栈起始地址（确保 8 字节对齐）
+    uint32_t *stack_start = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
+    
+    // 栈顶指针指向数组末尾（最高地址）
+    uint32_t *sp = stack_start + 256; // 0x200008A0
+    
+    // 预留硬件自动保存的 8 个字空间（向下生长）
+    sp -= 8;  // 此时 sp = 0x20000880
+    
+    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
+    sp[7] = 0x01000000U;      // xPSR (Thumb 模式)
+    sp[6] = (uint32_t)entry;   // PC (线程入口地址)
+    sp[5] = 0xFFFFFFFDU;      // LR (无效返回地址)
+    sp[4] = 0x00000000U;      // R12
+    sp[3] = 0x00000000U;      // R3
+    sp[2] = 0x00000000U;      // R2
+    sp[1] = 0x00000000U;      // R1
+    sp[0] = 0x00000000U;      // R0
 
-//     // 更新 TCB 中保存的栈指针，即 PSP 将指向这个区域的起始地址
-//     tcb->stack_ptr = sp;
-// }
+    // 在pendsv中会弹出r4-411
+    sp -= 8;  // 此时 sp = 0x20000880
+    
+    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
+    sp[7] = 0x00000000U;
+    sp[6] = 0x00000000U;
+    sp[5] = 0x00000000U;
+    sp[4] = 0x00000000U;
+    sp[3] = 0x00000000U;
+    sp[2] = 0x00000000U;
+    sp[1] = 0x00000000U;
+    sp[0] = 0x00000000U;
+    
+    // 更新 TCB 中的栈指针（指向硬件帧起始地址）
+    tcb->stack_ptr = sp;  // 0x20000880
+    tcb->entry = entry;
+}
 
 /**
  * @brief  The application entry point.
@@ -184,7 +184,7 @@ int main(void)
 
     // 初始化线程栈
     thread_stack_init(&tcb1, thread1);
-    thread_stack_init(&tcb2, thread2);
+    thread_stack_second(&tcb2, thread2);
 
     pxCurrentTCB = &tcb1;
 
@@ -203,18 +203,7 @@ int main(void)
 
 void thread1(void)
 {
-    // 初始化 NVIC 优先级分组
-    NVIC_SetPriorityGrouping(0x00000003U);
-    SystemClock_Config();
-    MX_GPIO_Init();
-    log_init();
-
-    cli_init();
-    cli_register_basic_commands();
-
-    // 初始化 PendSV 优先级
-    NVIC_SetPriority(PendSV_IRQn, 0xFF);
-
+    LOG_DBG("thread1");
     while (1)
     {
         uint8_t ch;
@@ -227,6 +216,7 @@ void thread1(void)
 
 void thread2(void)
 {
+    LOG_DBG("thread2");
     while (1)
     {
         uint8_t ch;

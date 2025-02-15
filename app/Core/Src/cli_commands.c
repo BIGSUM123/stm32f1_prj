@@ -1,5 +1,6 @@
 #include "cli_commands.h"
 #include "cli.h"
+#include "kernel.h"
 #include "log.h"
 #include "gpio.h"
 #include <stdint.h>
@@ -83,7 +84,7 @@ static int cmd_flash_test(int argc, char *argv[])
     return 0;
 }
 
-static int cmd_change(int argc, char *argv[])
+static int cmd_switch(int argc, char *argv[])
 {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
     __DSB();
@@ -92,12 +93,20 @@ static int cmd_change(int argc, char *argv[])
     return 0;
 }
 
+static int cmd_thread(int argc, char *argv[])
+{
+    extern tcb_t *pxCurrentTCB;
+    log_printf("%p\r\n", pxCurrentTCB);
+    return 0;
+}
+
 const static cli_command_t basic_commands[] = {
     {"help", "Show available commands", cmd_help},
     {"led", "Contrl led (on/off)", cmd_led},
     {"version", "Show firmware version", cmd_version},
     {"flash_test", "Test flash operations", cmd_flash_test},
-    {"change", "Change thread", cmd_change}
+    {"switch", "Change thread", cmd_switch},
+    {"thread", "get thread type", cmd_thread}
 };
 
 int cli_register_basic_commands()

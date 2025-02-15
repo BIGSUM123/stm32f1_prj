@@ -12,34 +12,36 @@ GTEXT(w_arm_svc)
 
 SECTION_FUNC(text, w_arm_svc)
 // SECTION_FUNC(text, start_first_thread)
-    CPSID   I                   // 关中断
-    LDR     R0, =pxCurrentTCB   // 加载 pxCurrentTCB 地址到 R0
-    LDR     R0, [R0]            // 获取当前 TCB 指针（如 &tcb1）
-    LDR     R1, [R0]            // 获取栈顶指针 → R1
-    MSR     PSP, R1             // 设置 PSP 为栈顶指针
-    MOV     R2, #0x02           // CONTROL[1] = 1 (使用 PSP)
-    MSR     CONTROL, R2
-    ISB                         // 必须的指令同步
-    MOV     LR, #0xFFFFFFFD     // EXC_RETURN: 使用 PSP + 线程模式
-    CPSIE   I                   // 开中断
-    BX      LR                  // 触发上下文切换
+    cpsid i
+    ldr r0, =pxCurrentTCB
+    ldr r0, [r0]
+    ldr r1, [r0]
+    msr psp, r1
+    mov r2, #0x02
+    msr control, r2
+    isb
+    mov lr, #0xFFFFFFFD
+    cpsie i
+    bx lr
 
 SECTION_FUNC(text, w_arm_pendsv)
-    CPSID I
+    cpsid i                 // 关中断
+    push {lr}               // 保存原始EXC_RETURN到堆栈
 
-    MRS R0, PSP
-    STMDB R0!, {R4-R11}
-    LDR R1, =pxCurrentTCB
-    LDR R2, [R1]
-    STR R0, [R2]
+    mrs r0, psp             // 获取线程栈指针
+    stmdb r0!, {r4-r11}     // 保存用户态寄存器
+    ldr r1, =pxCurrentTCB
+    ldr r2, [r1]
+    str r0, [r2]            // 更新任务控制块的栈顶指针
 
-    BL w_scheduler
+    bl w_scheduler          // 调用调度器（会覆盖LR）
 
-    LDR R1, =pxCurrentTCB
-    LDR R2, [R1]
-    LDR R0, [R2]
-    LDMIA R0!, {R4-R11}
-    MSR PSP, R0
+    ldr r1, =pxCurrentTCB
+    ldr r2, [r1]
+    ldr r0, [r2]            // 获取新任务的栈指针
+    ldmia r0!, {r4-r11}     // 恢复新任务的寄存器
+    msr psp, r0             // 更新线程栈指针
 
-    CPSIE I
-    BX LR
+    pop {lr}                // 恢复EXC_RETURN到LR
+    cpsie i                 // 开中断
+    bx lr                   // 正确退出异常
