@@ -65,12 +65,12 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void rtos_yield(void)
-{
-    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
-    __DSB();
-    __ISB();
-}
+// 将yield函数改为宏定义提高效率
+#define rtos_yield() do { \
+    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; \
+    __DSB(); \
+    __ISB(); \
+} while(0)
 
 void thread1(void);
 void thread2(void);
@@ -117,45 +117,9 @@ void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
     sp[2] = 0x00000000U;      // R2
     sp[1] = 0x00000000U;      // R1
     sp[0] = 0x00000000U;      // R0
-    
-    // 更新 TCB 中的栈指针（指向硬件帧起始地址）
-    tcb->stack_ptr = sp;  // 0x20000880
-    tcb->entry = entry;
-}
 
-// 栈初始化工具函数
-void thread_stack_second(tcb_t *tcb, void (*entry)(void)) {
-    // 栈起始地址（确保 8 字节对齐）
-    uint32_t *stack_start = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
-    
-    // 栈顶指针指向数组末尾（最高地址）
-    uint32_t *sp = stack_start + 256; // 0x200008A0
-    
-    // 预留硬件自动保存的 8 个字空间（向下生长）
-    sp -= 8;  // 此时 sp = 0x20000880
-    
-    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
-    sp[7] = 0x01000000U;      // xPSR (Thumb 模式)
-    sp[6] = (uint32_t)entry;   // PC (线程入口地址)
-    sp[5] = 0xFFFFFFFDU;      // LR (无效返回地址)
-    sp[4] = 0x00000000U;      // R12
-    sp[3] = 0x00000000U;      // R3
-    sp[2] = 0x00000000U;      // R2
-    sp[1] = 0x00000000U;      // R1
-    sp[0] = 0x00000000U;      // R0
-
-    // 在pendsv中会弹出r4-411
-    sp -= 8;  // 此时 sp = 0x20000880
-    
-    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
-    sp[7] = 0x00000000U;
-    sp[6] = 0x00000000U;
-    sp[5] = 0x00000000U;
-    sp[4] = 0x00000000U;
-    sp[3] = 0x00000000U;
-    sp[2] = 0x00000000U;
-    sp[1] = 0x00000000U;
-    sp[0] = 0x00000000U;
+    //R4-R11 预留空间
+    sp -= 8;
     
     // 更新 TCB 中的栈指针（指向硬件帧起始地址）
     tcb->stack_ptr = sp;  // 0x20000880
@@ -184,18 +148,16 @@ int main(void)
 
     // 初始化线程栈
     thread_stack_init(&tcb1, thread1);
-    thread_stack_second(&tcb2, thread2);
+    thread_stack_init(&tcb2, thread2);
 
     pxCurrentTCB = &tcb1;
 
     // 启用全局中断
     __enable_irq();
 
-    // 触发 SVC 中断来进行首次上下文切换
-    __asm("SVC #0");  // 调用 SVC 指令触发 SVC 异常
-    // // 触发首次上下文切换（手动跳转到线程1）
-    // extern void start_first_thread();
-    // start_first_thread();
+    // 触发首次上下文切换（手动跳转到线程1）
+    extern void start_first_thread();
+    start_first_thread();
 
     while (1);
 }

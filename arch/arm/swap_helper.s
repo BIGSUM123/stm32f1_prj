@@ -6,23 +6,43 @@
     .thumb
 
 GDATA(pxCurrentTCB)
-// GTEXT(start_first_thread)
+GTEXT(start_first_thread)
 GTEXT(w_arm_pendsv)
 GTEXT(w_arm_svc)
 
 SECTION_FUNC(text, w_arm_svc)
-// SECTION_FUNC(text, start_first_thread)
     cpsid i
-    ldr r0, =pxCurrentTCB
-    ldr r0, [r0]
-    ldr r1, [r0]
-    msr psp, r1
-    mov r2, #0x02
-    msr control, r2
+    // 弹出r4-r11设置psp
+    ldr r1, =pxCurrentTCB
+    ldr r1, [r1]
+    ldr r0, [r1]
+    ldmia r0!, {r4-r11}
+    msr psp, r0
     isb
-    mov lr, #0xFFFFFFFD
+
+    // 设置了lr就行
+    // 不需要显性设置control
+    mov r0, #0
+    msr basepri, r0
+    orr r14, #0xd
+    
     cpsie i
-    bx lr
+    bx r14
+
+SECTION_FUNC(text, start_first_thread)
+    // 把msp重置
+    ldr r0, =0xE000ED08
+    ldr r0, [r0]
+    ldr r0, [r0]
+    msr msp, r0
+    // 触发scv中断
+    cpsie i
+    cpsie f
+    dsb
+    isb
+    svc 0
+    nop
+    .ltorg
 
 SECTION_FUNC(text, w_arm_pendsv)
     cpsid i                 // 关中断
