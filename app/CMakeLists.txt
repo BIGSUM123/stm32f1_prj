@@ -12,6 +12,11 @@ add_executable(app
     ${CMAKE_SOURCE_DIR}/arch/arm/swap_helper.S
 )
 
+target_compile_definitions(app
+    PRIVATE
+        STM32F103x6
+)
+
 target_include_directories(app PRIVATE
     Core/Inc
     ${CMAKE_SOURCE_DIR}/include

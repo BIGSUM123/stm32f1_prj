@@ -19,6 +19,12 @@ target_link_libraries(bootloader PRIVATE
     stm32f1_module
 )
 
+target_compile_definitions(bootloader
+    PRIVATE
+        STM32F103x6
+        USE_FULL_LL_DRIVER
+)
+
 target_link_options(bootloader PRIVATE
     -T${CMAKE_CURRENT_SOURCE_DIR}/STM32F103C8Tx_FLASH.ld
     -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/bootloader.map
