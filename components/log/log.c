@@ -1,9 +1,13 @@
 #include "log.h"
 #include "log_config.h"
-#include "log_port.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include "drivers/uart.h"
 
+/**
+ * @brief 
+ * 
+ */
 static const char *level_strings[] = {
     "NONE",
     "ERR",
@@ -16,9 +20,15 @@ static const char *level_strings[] = {
  * @brief 
  * 
  */
+const struct device *log_uart;
+
+/**
+ * @brief 
+ * 
+ */
 void log_init()
 {
-    log_port_init();
+    log_uart = device_get_binding("uart1");
 }
 
 /**
@@ -47,7 +57,26 @@ void log_write(log_level_t level, const char *file, int line, const char *format
 
     len += snprintf(ptr + len, LOG_BUFFER_SIZE - len, "\r\n");
 
-    log_port_write(buffer, len);
+    for (int i = 0; i < len; i++) {
+        uart_poll_out(log_uart, buffer[i]);
+    }
+}
+
+/**
+ * @brief 
+ * 
+ */
+int log_read(uint8_t *data)
+{
+    if (data == NULL) {
+        return -1;
+    }
+
+    if (uart_poll_in(log_uart, data) == 0) {
+        return 1;
+    }
+
+    return 0;
 }
 
 /**
@@ -66,5 +95,7 @@ void log_printf(const char *format, ...)
     len += vsnprintf(buffer, LOG_BUFFER_SIZE, format, args);
     va_end(args);
 
-    log_port_write(buffer, len);
+    for (int i = 0; i < len; i++) {
+        uart_poll_out(log_uart, buffer[i]);
+    }
 }

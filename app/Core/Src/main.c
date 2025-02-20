@@ -169,7 +169,7 @@ void thread1(void)
     while (1)
     {
         uint8_t ch;
-        if (log_port_receive(&ch) == 1) {
+        if (log_read(&ch) == 1) {
             cli_process_char(ch);
         }
     }
@@ -182,7 +182,7 @@ void thread2(void)
     while (1)
     {
         uint8_t ch;
-        if (log_port_receive(&ch) == 1) {
+        if (log_read(&ch) == 1) {
             cli_process_char(ch);
         }
     }

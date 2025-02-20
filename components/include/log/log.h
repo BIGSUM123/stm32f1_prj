@@ -1,6 +1,8 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#include <stdint.h>
+
 typedef enum {
     LOG_LEVEL_NONE = 0,
     LOG_LEVEL_ERROR,
@@ -26,6 +28,14 @@ void log_init();
  * @param ... 
  */
 void log_write(log_level_t level, const char *file, int line, const char *format, ...);
+
+/**
+ * @brief 
+ * 
+ * @param data 
+ * @return int 
+ */
+int log_read(uint8_t *data);
 
 /**
  * @brief 

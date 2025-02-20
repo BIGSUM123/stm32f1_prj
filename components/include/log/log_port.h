@@ -1,6 +1,8 @@
 #ifndef __LOG_PORT_H__
 #define __LOG_PORT_H__
 
+#ifdef LOG_PORT_ENABLE
+
 #include <stdint.h>
 
 /**
@@ -24,5 +26,7 @@ void log_port_write(const char *date, uint16_t len);
  * @return int 
  */
 int log_port_receive(uint8_t *data);
+
+#endif // LOG_PORT_ENABLE
 
 #endif // __LOG_PORT_H__
