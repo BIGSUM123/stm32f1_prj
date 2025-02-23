@@ -22,7 +22,6 @@
 #include "cli_commands.h"
 #include "gpio.h"
 #include "log.h"
-#include "log_port.h"
 #include <stdint.h>
 #include "stm32f1xx_ll_rcc.h"
 #include "stm32f1xx_ll_system.h"

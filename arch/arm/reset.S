@@ -59,7 +59,7 @@ LoopFillZerobss:
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/
-    bl w_start
+    bl w_prep_c
     bx lr
 .size w_arm_reset, .-w_arm_reset
 

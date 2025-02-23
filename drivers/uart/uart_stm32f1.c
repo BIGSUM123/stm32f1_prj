@@ -87,11 +87,10 @@ static int uart_stm32_init(const struct device *dev)
     // LL_USART_InitTypeDef uart_init;
 
     // LL_USART_ClockInitTypeDef USART_ClockInitStruct;
-
-    // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
-
     // LL_GPIO_InitTypeDef GPIO_InitStruct;
     // LL_GPIO_StructInit(&GPIO_InitStruct);
+
+    // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 
     // // PA9 - TX
     // GPIO_InitStruct.Pin = LL_GPIO_PIN_9;
@@ -118,8 +117,8 @@ static int uart_stm32_init(const struct device *dev)
     // uart_init.StopBits = LL_USART_STOPBITS_1;
     // uart_init.Parity = LL_USART_PARITY_NONE;
     // uart_init.TransferDirection = LL_USART_DIRECTION_TX_RX;
-    // // uart_init.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
-    // // uart_init.OverSampling = LL_USART_OVERSAMPLING_16;
+    // uart_init.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+    // uart_init.OverSampling = LL_USART_OVERSAMPLING_16;
 
     // LL_USART_Disable(config->usart);
     // LL_USART_Init(config->usart, &uart_init);

@@ -52,7 +52,7 @@ static void sys_init_run()
     }
 }
 
-void w_start(void)
+void w_cstart(void)
 {
     sys_init_run();
 

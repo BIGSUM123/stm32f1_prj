@@ -11,6 +11,7 @@ add_executable(bootloader
     ${CMAKE_SOURCE_DIR}/arch/arm/vector_table.S
     ${CMAKE_SOURCE_DIR}/arch/arm/fault_s.S
     ${CMAKE_SOURCE_DIR}/arch/arm/swap_helper.S
+    ${CMAKE_SOURCE_DIR}/arch/arm/prep_c.c
 )
 
 target_include_directories(bootloader PRIVATE
