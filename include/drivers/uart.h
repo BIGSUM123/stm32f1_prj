@@ -315,6 +315,8 @@ typedef void (*uart_callback_t)(const struct device *dev,
 typedef struct uart_driver_api {
     int (*poll_in)(const struct device *dev, uint8_t *p_char);
     void (*poll_out)(const struct device *dev, uint8_t out_char);
+	int (*configure)(const struct device *dev, const struct uart_config *cfg);
+	int (*config_get)(const struct device *dev, struct uart_config *cfg);
 } uart_driver_api_t;
 
 /**
@@ -358,6 +360,66 @@ static inline void uart_poll_out(const struct device *dev,
 		(const struct uart_driver_api *)dev->api;
 
 	api->poll_out(dev, out_char);
+}
+
+/**
+ * @brief Set UART configuration.
+ *
+ * Sets UART configuration using data from *cfg.
+ *
+ * @param dev UART device instance.
+ * @param cfg UART configuration structure.
+ *
+ * @retval 0 If successful.
+ * @retval -errno Negative errno code in case of failure.
+ * @retval -ENOSYS If configuration is not supported by device
+ *                  or driver does not support setting configuration in runtime.
+ * @retval -ENOTSUP If API is not enabled.
+ */
+static inline int uart_configure(const struct device *dev,
+						const struct uart_config *cfg)
+{
+	const struct uart_driver_api *api =
+				(const struct uart_driver_api *)dev->api;
+
+	if (api->configure == NULL) {
+		return -1;
+	}
+
+	return api->configure(dev, cfg);
+}
+
+/**
+ * @brief Get UART configuration.
+ *
+ * Stores current UART configuration to *cfg, can be used to retrieve initial
+ * configuration after device was initialized using data from DTS.
+ *
+ * @param dev UART device instance.
+ * @param cfg UART configuration structure.
+ *
+ * @retval 0 If successful.
+ * @retval -errno Negative errno code in case of failure.
+ * @retval -ENOSYS If driver does not support getting current configuration.
+ * @retval -ENOTSUP If API is not enabled.
+ */
+
+static inline int uart_config_get(const struct device *dev,
+						struct uart_config *cfg)
+{
+	const struct uart_driver_api *api =
+				(const struct uart_driver_api *)dev->api;
+
+	if (api->config_get == NULL) {
+		return -1;
+	}
+
+	return api->config_get(dev, cfg);
+// #ifndef CONFIG_UART_USE_RUNTIME_CONFIGURE
+// 	// ARG_UNUSED(dev);
+// 	// ARG_UNUSED(cfg);
+// 	// return -ENOTSUP;
+// #endif
 }
 
 #ifdef __cplusplus

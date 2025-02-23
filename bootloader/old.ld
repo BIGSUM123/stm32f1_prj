@@ -50,12 +50,12 @@
 */
 
 /* Entry Point */
-/* ENTRY(w_arm_reset) */
+ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
 _estack = ORIGIN(RAM) + LENGTH(RAM);    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x200; /* required amount of heap  */
+_Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
 /* Specify the memory areas */
@@ -73,33 +73,6 @@ SECTIONS
     {
         . = ALIGN(4);
         KEEP(*(.isr_vector)) /* Startup code */
-        . = ALIGN(4);
-    } >FLASH
-
-    device_area :
-    {
-        . = ALIGN(4);
-        _device_list_start = .;
-        KEEP (*(._device_obj))
-        _device_list_end = .;
-        . = ALIGN(4);
-    } >FLASH
-
-    init_fn :
-    {
-        . = ALIGN(4);
-        _init_fn_start = .;
-        KEEP (*(._init_fn))
-        _init_fn_end = .;
-        . = ALIGN(4);
-    } >FLASH
-
-    test_device_area :
-    {
-        . = ALIGN(4);
-        _test_device_start = .;
-        KEEP (*(.device_test))
-        _test_device_end = .;
         . = ALIGN(4);
     } >FLASH
 
@@ -142,7 +115,6 @@ SECTIONS
         KEEP (*(.preinit_array*))
         PROVIDE_HIDDEN (__preinit_array_end = .);
     } >FLASH
-
     .init_array :
     {
         PROVIDE_HIDDEN (__init_array_start = .);
@@ -150,7 +122,6 @@ SECTIONS
         KEEP (*(.init_array*))
         PROVIDE_HIDDEN (__init_array_end = .);
     } >FLASH
-
     .fini_array :
     {
         PROVIDE_HIDDEN (__fini_array_start = .);
@@ -169,6 +140,7 @@ SECTIONS
         _sdata = .;        /* create a global symbol at data start */
         *(.data)           /* .data sections */
         *(.data*)          /* .data* sections */
+
         . = ALIGN(4);
         _edata = .;        /* define a global symbol at data end */
     } >RAM AT> FLASH
@@ -183,6 +155,7 @@ SECTIONS
         *(.bss)
         *(.bss*)
         *(COMMON)
+
         . = ALIGN(4);
         _ebss = .;         /* define a global symbol at bss end */
         __bss_end__ = _ebss;
@@ -209,5 +182,3 @@ SECTIONS
 
     .ARM.attributes 0 : { *(.ARM.attributes) }
 }
-
-

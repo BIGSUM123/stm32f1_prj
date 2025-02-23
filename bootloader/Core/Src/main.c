@@ -17,13 +17,13 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include "kernel.h"
 #include "main.h"
 #include "boot.h"
 #include "cli.h"
 #include "cli_commands.h"
 #include "gpio.h"
 #include "log.h"
-#include "log_port.h"
 #include <stdint.h>
 #include "stm32f1xx_ll_rcc.h"
 #include "stm32f1xx_ll_system.h"
@@ -67,6 +67,13 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
+tcb_t *pxCurrentTCB;      // 当前任务指针
+
+void w_scheduler()
+{
+    
+}
+
 /**
  * @brief  The application entry point.
  * @retval int
@@ -92,7 +99,7 @@ int main(void)
     while (1)
     {
         uint8_t ch;
-        if (log_port_receive(&ch) == 1) {
+        if (log_read(&ch) == 1) {
             cli_process_char(ch);
         }
     }

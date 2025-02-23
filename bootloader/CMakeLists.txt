@@ -7,22 +7,30 @@ add_executable(bootloader
     Core/Src/system_stm32f1xx.c
     Core/Src/sysmem.c
     Core/Src/syscalls.c
-    startup_stm32f103xb.s
+    ${CMAKE_SOURCE_DIR}/arch/arm/reset.S
+    ${CMAKE_SOURCE_DIR}/arch/arm/vector_table.S
+    ${CMAKE_SOURCE_DIR}/arch/arm/fault_s.S
+    ${CMAKE_SOURCE_DIR}/arch/arm/swap_helper.S
 )
 
 target_include_directories(bootloader PRIVATE
     Core/Inc
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/components/include/cli
+    ${CMAKE_SOURCE_DIR}/components/include/log
+    ${CMAKE_SOURCE_DIR}/components/include/flash
 )
 
 target_link_libraries(bootloader PRIVATE
     components
     stm32f1_module
+    drivers
+    kernel
 )
 
 target_compile_definitions(bootloader
     PRIVATE
         STM32F103x6
-        USE_FULL_LL_DRIVER
 )
 
 target_link_options(bootloader PRIVATE

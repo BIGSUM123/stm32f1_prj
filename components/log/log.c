@@ -29,6 +29,7 @@ const struct device *log_uart;
 void log_init()
 {
     log_uart = device_get_binding("uart1");
+    uart_configure(log_uart, NULL);
 }
 
 /**
