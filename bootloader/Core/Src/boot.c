@@ -1,20 +1,29 @@
 #include "boot.h"
-#include "flash.h"
+#include "device.h"
+#include "drivers/flash.h"
 #include "log.h"
 #include <stdint.h>
 #include <string.h>
 #include "stm32f1xx.h"
 
+#define FLASH_PAGE_SIZE 1024
+
 typedef void (*pFunction)(void);  // 定义函数指针类型，指向一个无参数无返回值的函数
 
 static firmware_state_t fw_state;
 
+static const struct device *flash = NULL;
+
 int boot_init(void)
 {
-    if (flash_init() != 0) {
+    flash = device_get_binding("flash");
+
+    if (flash == NULL) {
         LOG_ERR("Boot init failed!");
         return -1;
     }
+
+    flash_get_parameters(flash);
 
     memset(&fw_state, 0, sizeof(fw_state));
     LOG_INFO("Bootloader Version: %s", BOOT_VERSION);
@@ -125,7 +134,8 @@ int boot_update_app(uint8_t *data, uint32_t size)
         for (current_page = APP_START_ADDR;
             current_page < (APP_START_ADDR + size);
             current_page += FLASH_PAGE_SIZE) {
-            if(flash_erase_page(current_page) != 0) {
+            if (flash_erase(flash, 
+                current_page, FLASH_PAGE_SIZE) != 0) {
                 LOG_ERR("Erase failed at 0x%08X", current_page);
                 return -1;
             }
@@ -135,7 +145,8 @@ int boot_update_app(uint8_t *data, uint32_t size)
     while (remaining > 0) {
         uint32_t write_size = (remaining > 256) ? 256 : remaining;
 
-        if (flash_write(fw_state.current_addr, data, write_size) != 0) {
+        if (flash_write(flash,
+            fw_state.current_addr, data, write_size) != 0) {
             LOG_ERR("Write failed at 0x%08X", fw_state.current_addr);
             return -1;
         }

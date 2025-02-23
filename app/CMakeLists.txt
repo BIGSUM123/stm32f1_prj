@@ -23,7 +23,6 @@ target_include_directories(app PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/components/include/cli
     ${CMAKE_SOURCE_DIR}/components/include/log
-    ${CMAKE_SOURCE_DIR}/components/include/flash
 )
 
 target_link_libraries(app PRIVATE

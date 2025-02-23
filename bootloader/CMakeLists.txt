@@ -19,7 +19,6 @@ target_include_directories(bootloader PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/components/include/cli
     ${CMAKE_SOURCE_DIR}/components/include/log
-    ${CMAKE_SOURCE_DIR}/components/include/flash
 )
 
 target_link_libraries(bootloader PRIVATE

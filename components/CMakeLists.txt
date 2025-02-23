@@ -1,7 +1,7 @@
 add_library(components STATIC
     log/log.c
     cli/cli.c
-    flash/flash.c
+    # flash/flash.c
 )
 
 target_compile_definitions(components
@@ -17,7 +17,6 @@ target_link_libraries(components
 target_include_directories(components PUBLIC
     include/cli
     include/log
-    include/flash
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/modules/STM32F1xx_HAL/CMSIS/Device/ST/STM32F1xx/Include
     ${CMAKE_SOURCE_DIR}/modules/STM32F1xx_HAL/CMSIS/Include
