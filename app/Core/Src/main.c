@@ -178,12 +178,24 @@ void thread1(void)
 void thread2(void)
 {
     LOG_DBG("thread2");
+    uint8_t ch = 0;
     while (1)
     {
-        uint8_t ch;
-        if (log_read(&ch) == 1) {
-            cli_process_char(ch);
+        ch++;
+
+        led_ctrl(LED_ON);
+        LL_mDelay(1000);
+
+        led_ctrl(LED_OFF);
+        
+        if (ch >= 5) {
+            ch = 0;
+            LOG_DBG("switch to thread1");
+            rtos_yield();
+            LOG_DBG("this is thread2");
         }
+
+        LL_mDelay(1000);
     }
 }
 
