@@ -185,7 +185,6 @@ void thread2(void)
 
         led_ctrl(LED_ON);
         LL_mDelay(1000);
-
         led_ctrl(LED_OFF);
         
         if (ch >= 5) {
@@ -193,6 +192,7 @@ void thread2(void)
             LOG_DBG("switch to thread1");
             rtos_yield();
             LOG_DBG("this is thread2");
+            led_ctrl(LED_OFF);
         }
 
         LL_mDelay(1000);
