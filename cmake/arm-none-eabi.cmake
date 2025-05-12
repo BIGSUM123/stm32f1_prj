@@ -20,8 +20,8 @@ set(CMAKE_OBJCOPY "${TOOLCHAIN_PATH}/arm-none-eabi-objcopy${EXE_SUFFIX}")
 set(CMAKE_SIZE "${TOOLCHAIN_PATH}/arm-none-eabi-size${EXE_SUFFIX}")
 
 # MCU 标志
-set(CPU_FLAGS "-mcpu=cortex-m3 -mthumb")
-set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections -std=c99")
+set(CPU_FLAGS "-mcpu=cortex-m4 -mthumb")
+set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections -std=c11")
 
 # 编译标志
 set(CMAKE_C_FLAGS "${COMMON_FLAGS}" CACHE STRING "C compiler flags")
