@@ -43,10 +43,31 @@ typedef struct task_control_block {
     uint32_t stack_canary;         // 栈金丝雀值
 } tcb_t;
 
+/* Mutex Control Block */
+typedef struct mutex_control_block {
+    char name[16];                 // 互斥锁名称
+    tcb_t *owner;                  // 当前持有者
+    uint32_t lock_count;           // 递归锁计数
+    tcb_t *wait_list_head;         // 等待队列头
+    tcb_t *wait_list_tail;         // 等待队列尾
+    uint8_t original_priority;     // 持有者原始优先级（用于优先级继承）
+    bool is_recursive;             // 是否支持递归锁
+    uint32_t magic;                // 魔数，用于检测对象有效性
+} mutex_t;
+
+#define MUTEX_MAGIC                0x4D555458  // "MUTX"
+
 /* Global Variables */
 extern tcb_t *pxCurrentTCB;        // 当前任务指针（保持兼容性）
 
 /* Kernel Internal Functions */
 void w_scheduler(void);            // 调度器函数
+
+/* Ready Queue Management (for synchronization objects) */
+void add_to_ready_queue(tcb_t *task);
+void remove_from_ready_queue(tcb_t *task);
+
+/* Synchronization Object Management */
+bool mutex_remove_waiting_task(tcb_t *task);
 
 #endif // __KERNEL_H__

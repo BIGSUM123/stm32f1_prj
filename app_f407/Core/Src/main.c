@@ -72,10 +72,17 @@ void SystemClock_Config(void);
 /* RTOS Test Tasks */
 void led_task(void *parameter);
 void cli_task(void *parameter);
+void mutex_test_task1(void *parameter);
+void mutex_test_task2(void *parameter);
 
 /* Task handles */
 static task_handle_t led_task_handle = NULL;
 static task_handle_t cli_task_handle = NULL;
+static task_handle_t mutex_task1_handle = NULL;
+static task_handle_t mutex_task2_handle = NULL;
+
+/* Shared mutex for testing */
+static mutex_handle_t uart_mutex = NULL;
 
 uint32_t uart_init_ret = 0;
 
@@ -142,6 +149,29 @@ int main(void)
 		LOG_DBG("CLI task created successfully");
 	}
 
+	// Create mutex for testing
+	uart_mutex = mutex_create("UART_MUTEX");
+	if (uart_mutex == NULL) {
+		LOG_DBG("Failed to create UART mutex");
+	} else {
+		LOG_DBG("UART mutex created successfully");
+	}
+
+	// Create mutex test tasks
+	mutex_task1_handle = task_create("MUTEX_T1", mutex_test_task1, NULL, 1024, RTOS_PRIORITY_HIGH);
+	if (mutex_task1_handle == NULL) {
+		LOG_DBG("Failed to create mutex test task 1");
+	} else {
+		LOG_DBG("Mutex test task 1 created successfully");
+	}
+
+	mutex_task2_handle = task_create("MUTEX_T2", mutex_test_task2, NULL, 1024, RTOS_PRIORITY_HIGH);
+	if (mutex_task2_handle == NULL) {
+		LOG_DBG("Failed to create mutex test task 2");
+	} else {
+		LOG_DBG("Mutex test task 2 created successfully");
+	}
+
 	// Debug: Check system state before starting
 	extern uint8_t rtos_get_ready_bitmap(void);
 	uint8_t bitmap = rtos_get_ready_bitmap();
@@ -196,6 +226,75 @@ void cli_task(void *parameter)
 		if (log_read(&ch) == 1) {
 			cli_process_char(ch);
 		}
+		task_delay_ms(50);
+	}
+}
+
+/**
+ * @brief Mutex test task 1 - demonstrates mutex usage
+ */
+void mutex_test_task1(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Mutex test task 1 started");
+
+	uint32_t counter = 0;
+
+	while (1) {
+		counter++;
+
+		// Try to acquire the mutex
+		rtos_error_t result = mutex_lock(uart_mutex, 1000); // 1 second timeout
+		if (result == RTOS_OK) {
+			// Critical section - exclusive access to UART
+			LOG_DBG("Task1: Got mutex, counter=%lu", counter);
+			
+			// Simulate some work
+			task_delay_ms(100);
+			
+			LOG_DBG("Task1: Releasing mutex");
+			mutex_unlock(uart_mutex);
+		} else {
+			LOG_DBG("Task1: Failed to get mutex, result=%d", result);
+		}
+
+		// Wait before next attempt
+		task_delay_ms(500);
+	}
+}
+
+/**
+ * @brief Mutex test task 2 - demonstrates mutex contention
+ */
+void mutex_test_task2(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Mutex test task 2 started");
+
+	uint32_t counter = 0;
+
+	while (1) {
+		counter++;
+
+		// Try to acquire the mutex
+		rtos_error_t result = mutex_lock(uart_mutex, 1000); // 1 second timeout
+		if (result == RTOS_OK) {
+			// Critical section - exclusive access to UART
+			LOG_DBG("Task2: Got mutex, counter=%lu", counter);
+			
+			// Simulate some work
+			task_delay_ms(150);
+			
+			LOG_DBG("Task2: Releasing mutex");
+			mutex_unlock(uart_mutex);
+		} else {
+			LOG_DBG("Task2: Failed to get mutex, result=%d", result);
+		}
+
+		// Wait before next attempt
+		task_delay_ms(700);
 	}
 }
 

@@ -59,8 +59,8 @@ static tcb_t *allocate_tcb(void);
 static void free_tcb(tcb_t *tcb);
 static void init_task_stack(tcb_t *task);
 static uint8_t find_highest_priority(void);
-static void add_to_ready_queue(tcb_t *task);
-static void remove_from_ready_queue(tcb_t *task);
+void add_to_ready_queue(tcb_t *task);
+void remove_from_ready_queue(tcb_t *task);
 
 /**
  * @brief Initialize RTOS core
@@ -87,7 +87,6 @@ rtos_error_t rtos_init(void)
 	idle_task_tcb.parameter = NULL;
 	strcpy(idle_task_tcb.name, "IDLE");
 	idle_task_tcb.priority = RTOS_PRIORITY_IDLE;
-	idle_task_tcb.state = TASK_STATE_READY;
 	idle_task_tcb.stack_base = &idle_task_stack[RTOS_IDLE_STACK_SIZE];
 	idle_task_tcb.stack_size = sizeof(idle_task_stack);
 	idle_task_tcb.time_slice = RTOS_TIME_SLICE_TICKS;
@@ -391,7 +390,7 @@ static uint8_t find_highest_priority(void)
 /**
  * @brief Add task to ready queue
  */
-static void add_to_ready_queue(tcb_t *task)
+void add_to_ready_queue(tcb_t *task)
 {
 	if (task == NULL || task->priority >= RTOS_MAX_PRIORITIES) {
 		return;
@@ -420,7 +419,7 @@ static void add_to_ready_queue(tcb_t *task)
 /**
  * @brief Remove task from ready queue
  */
-static void remove_from_ready_queue(tcb_t *task)
+void remove_from_ready_queue(tcb_t *task)
 {
 	if (task == NULL || task->priority >= RTOS_MAX_PRIORITIES) {
 		return;
@@ -454,23 +453,49 @@ static void remove_from_ready_queue(tcb_t *task)
 /* Static task stacks for testing */
 static uint32_t task_stack_1[128] __attribute__((aligned(8))); // 512 bytes
 static uint32_t task_stack_2[256] __attribute__((aligned(8))); // 1024 bytes
-static bool static_stacks_used[2] = {false, false};
+static uint32_t task_stack_3[256] __attribute__((aligned(8))); // 512 bytes
+static uint32_t task_stack_4[256] __attribute__((aligned(8))); // 512 bytes
+static uint32_t task_stack_5[256] __attribute__((aligned(8))); // 512 bytes
+static bool static_stacks_used[5] = {false, false, false, false, false};
 
 /**
  * @brief Allocate a static stack for testing (temporary solution)
  */
 static uint32_t *allocate_static_stack(uint32_t size, uint32_t *actual_size)
 {
+	// try 512-byte stacks
 	if (size <= 512 && !static_stacks_used[0]) {
+		LOG_DBG("use stack 0");
 		static_stacks_used[0] = true;
 		*actual_size = sizeof(task_stack_1);
 		return task_stack_1;
-	} else if (size <= 1024 && !static_stacks_used[1]) {
-		static_stacks_used[1] = true;
-		*actual_size = sizeof(task_stack_2);
-		return task_stack_2;
 	}
-	return NULL;
+
+	// Then try to allocate 1024-byte stack first (for CLI task)
+	if (size <= 1024) {
+		for (int i = 1; i < 5; i++) {
+			if (!static_stacks_used[i]) {
+				static_stacks_used[i] = true;
+				LOG_DBG("use stack %d", i);
+				switch (i) {
+				case 1:
+					*actual_size = sizeof(task_stack_2);
+					return task_stack_2;
+				case 2:
+					*actual_size = sizeof(task_stack_3);
+					return task_stack_3;
+				case 3:
+					*actual_size = sizeof(task_stack_4);
+					return task_stack_4;
+				case 4:
+					*actual_size = sizeof(task_stack_5);
+					return task_stack_5;
+				}
+			}
+		}
+	}
+
+	return NULL; // No available stack
 }
 
 /**
@@ -503,7 +528,6 @@ task_handle_t task_create(const char *name, task_func_t entry, void *parameter, 
 	strncpy(task->name, name ? name : "UNNAMED", sizeof(task->name) - 1);
 	task->name[sizeof(task->name) - 1] = '\0';
 	task->priority = priority;
-	task->state = TASK_STATE_READY;
 
 	// Stack grows downward, so stack_base points to the highest address
 	task->stack_base = &stack[(actual_size / sizeof(uint32_t))];
@@ -603,7 +627,6 @@ rtos_error_t task_resume(task_handle_t task)
 	__disable_irq();
 
 	if (task->state == TASK_STATE_SUSPENDED) {
-		task->state = TASK_STATE_READY;
 		add_to_ready_queue(task);
 	}
 
@@ -726,13 +749,30 @@ static void process_delayed_tasks(void)
 			// 	led_task_state = task->state;
 			// }
 
-			if (task->state == TASK_STATE_BLOCKED &&
-			    (int32_t)(rtos_core.tick_count - task->wake_time) >= 0) {
-				// Task delay expired, move to ready queue
-				// LOG_DBG("Waking up task[%d]: current_tick=%lu >= wake_time=%lu", i,
-				// 	rtos_core.tick_count, task->wake_time);
-				task->state = TASK_STATE_READY;
-				add_to_ready_queue(task);
+			if (task->state == TASK_STATE_BLOCKED) {
+				// Check for task_delay() timeout
+				if (task->waiting_object == NULL &&
+				    (int32_t)(rtos_core.tick_count - task->wake_time) >= 0) {
+					// Task delay expired, move to ready queue
+					add_to_ready_queue(task);
+				}
+				// Check for mutex/semaphore timeout
+				else if (task->waiting_object != NULL && task->wait_timeout != 0 &&
+					 (int32_t)(rtos_core.tick_count - task->wait_timeout) >=
+						 0) {
+					// Waiting timeout expired
+
+					// Remove from wait list first (before clearing
+					// waiting_object)
+					mutex_remove_waiting_task(task);
+
+					// Clear waiting information
+					task->wait_result = RTOS_TIMEOUT;
+					task->waiting_object = NULL;
+
+					// Move back to ready queue
+					add_to_ready_queue(task);
+				}
 			}
 		}
 	}

@@ -46,6 +46,9 @@ typedef void (*task_func_t)(void *parameter);
 struct task_control_block;
 typedef struct task_control_block* task_handle_t;
 
+struct mutex_control_block;
+typedef struct mutex_control_block* mutex_handle_t;
+
 /* Wait Options */
 #define RTOS_WAIT_FOREVER           0xFFFFFFFF
 #define RTOS_NO_WAIT                0
@@ -88,6 +91,13 @@ bool scheduler_is_locked(void);
 uint32_t rtos_get_tick_count(void);
 uint32_t rtos_ms_to_ticks(uint32_t milliseconds);
 uint32_t rtos_ticks_to_ms(uint32_t ticks);
+
+/* Mutex Functions */
+mutex_handle_t mutex_create(const char *name);
+rtos_error_t mutex_delete(mutex_handle_t mutex);
+rtos_error_t mutex_lock(mutex_handle_t mutex, uint32_t timeout);
+rtos_error_t mutex_unlock(mutex_handle_t mutex);
+task_handle_t mutex_get_owner(mutex_handle_t mutex);
 
 #ifdef __cplusplus
 }
