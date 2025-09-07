@@ -74,15 +74,23 @@ void led_task(void *parameter);
 void cli_task(void *parameter);
 void mutex_test_task1(void *parameter);
 void mutex_test_task2(void *parameter);
+void semaphore_producer_task(void *parameter);
+void semaphore_consumer_task(void *parameter);
 
 /* Task handles */
 static task_handle_t led_task_handle = NULL;
 static task_handle_t cli_task_handle = NULL;
 static task_handle_t mutex_task1_handle = NULL;
 static task_handle_t mutex_task2_handle = NULL;
+static task_handle_t sem_producer_handle = NULL;
+static task_handle_t sem_consumer_handle = NULL;
 
 /* Shared mutex for testing */
 static mutex_handle_t uart_mutex = NULL;
+
+/* Shared semaphores for testing */
+semaphore_handle_t binary_sem = NULL;
+semaphore_handle_t counting_sem = NULL;
 
 uint32_t uart_init_ret = 0;
 
@@ -149,27 +157,59 @@ int main(void)
 		LOG_DBG("CLI task created successfully");
 	}
 
-	// Create mutex for testing
-	uart_mutex = mutex_create("UART_MUTEX");
-	if (uart_mutex == NULL) {
-		LOG_DBG("Failed to create UART mutex");
+	// // Create mutex for testing
+	// uart_mutex = mutex_create("UART_MUTEX");
+	// if (uart_mutex == NULL) {
+	// 	LOG_DBG("Failed to create UART mutex");
+	// } else {
+	// 	LOG_DBG("UART mutex created successfully");
+	// }
+
+	// // Create mutex test tasks
+	// mutex_task1_handle = task_create("MUTEX_T1", mutex_test_task1, NULL, 1024, RTOS_PRIORITY_HIGH);
+	// if (mutex_task1_handle == NULL) {
+	// 	LOG_DBG("Failed to create mutex test task 1");
+	// } else {
+	// 	LOG_DBG("Mutex test task 1 created successfully");
+	// }
+	(void)mutex_task1_handle;
+
+	// mutex_task2_handle = task_create("MUTEX_T2", mutex_test_task2, NULL, 1024, RTOS_PRIORITY_HIGH);
+	// if (mutex_task2_handle == NULL) {
+	// 	LOG_DBG("Failed to create mutex test task 2");
+	// } else {
+	// 	LOG_DBG("Mutex test task 2 created successfully");
+	// }
+	(void)mutex_task2_handle;
+
+	// Create semaphores for testing
+	binary_sem = sem_create_binary("BIN_SEM", 0);  // Initially empty
+	if (binary_sem == NULL) {
+		LOG_DBG("Failed to create binary semaphore");
 	} else {
-		LOG_DBG("UART mutex created successfully");
+		LOG_DBG("Binary semaphore created successfully");
 	}
 
-	// Create mutex test tasks
-	mutex_task1_handle = task_create("MUTEX_T1", mutex_test_task1, NULL, 1024, RTOS_PRIORITY_HIGH);
-	if (mutex_task1_handle == NULL) {
-		LOG_DBG("Failed to create mutex test task 1");
+	counting_sem = sem_create_counting("COUNT_SEM", 5, 2);  // Max 5, initial 2
+	if (counting_sem == NULL) {
+		LOG_DBG("Failed to create counting semaphore");
 	} else {
-		LOG_DBG("Mutex test task 1 created successfully");
+		LOG_DBG("Counting semaphore created successfully");
 	}
 
-	mutex_task2_handle = task_create("MUTEX_T2", mutex_test_task2, NULL, 1024, RTOS_PRIORITY_HIGH);
-	if (mutex_task2_handle == NULL) {
-		LOG_DBG("Failed to create mutex test task 2");
+	// Create semaphore test tasks
+	sem_producer_handle = task_create("SEM_PROD", semaphore_producer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	if (sem_producer_handle == NULL) {
+		LOG_DBG("Failed to create semaphore producer task");
 	} else {
-		LOG_DBG("Mutex test task 2 created successfully");
+		LOG_DBG("Semaphore producer task created successfully");
+	}
+
+	sem_consumer_handle = task_create("SEM_CONS", semaphore_consumer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	if (sem_consumer_handle == NULL) {
+		LOG_DBG("Failed to create semaphore consumer task");
+	} else {
+		LOG_DBG("Semaphore consumer task created successfully");
 	}
 
 	// Debug: Check system state before starting
@@ -359,6 +399,87 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/**
+ * @brief Semaphore producer task - demonstrates semaphore posting
+ */
+void semaphore_producer_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Semaphore producer task started");
+
+	uint32_t counter = 0;
+
+	while (1) {
+		counter++;
+
+		// Test binary semaphore - post every 3 seconds
+		if ((counter % 30) == 0) {
+			rtos_error_t result = sem_post(binary_sem);
+			if (result == RTOS_OK) {
+				LOG_DBG("Producer: Binary semaphore posted (count=%lu)", 
+					sem_get_count(binary_sem));
+			} else {
+				LOG_DBG("Producer: Failed to post binary semaphore (error=%d)", result);
+			}
+		}
+
+		// Test counting semaphore - post every 2 seconds
+		if ((counter % 20) == 0) {
+			rtos_error_t result = sem_post(counting_sem);
+			if (result == RTOS_OK) {
+				LOG_DBG("Producer: Counting semaphore posted (count=%lu)", 
+					sem_get_count(counting_sem));
+			} else {
+				LOG_DBG("Producer: Failed to post counting semaphore (error=%d)", result);
+			}
+		}
+
+		task_delay_ms(100); // 100ms delay
+	}
+}
+
+/**
+ * @brief Semaphore consumer task - demonstrates semaphore waiting
+ */
+void semaphore_consumer_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Semaphore consumer task started");
+
+	uint32_t binary_acquired = 0;
+	uint32_t counting_acquired = 0;
+
+	while (1) {
+		// Try to acquire binary semaphore with timeout
+		rtos_error_t result = sem_wait(binary_sem, rtos_ms_to_ticks(1000));
+		if (result == RTOS_OK) {
+			binary_acquired++;
+			LOG_DBG("Consumer: Binary semaphore acquired #%lu (count=%lu)", 
+				binary_acquired, sem_get_count(binary_sem));
+		} else if (result == RTOS_TIMEOUT) {
+			LOG_DBG("Consumer: Binary semaphore timeout");
+		} else {
+			LOG_DBG("Consumer: Binary semaphore error (%d)", result);
+		}
+
+		// Try to acquire counting semaphore with timeout
+		result = sem_wait(counting_sem, rtos_ms_to_ticks(500));
+		if (result == RTOS_OK) {
+			counting_acquired++;
+			LOG_DBG("Consumer: Counting semaphore acquired #%lu (count=%lu)", 
+				counting_acquired, sem_get_count(counting_sem));
+		} else if (result == RTOS_TIMEOUT) {
+			LOG_DBG("Consumer: Counting semaphore timeout");
+		} else {
+			LOG_DBG("Consumer: Counting semaphore error (%d)", result);
+		}
+
+		task_delay_ms(800); // 800ms delay
+	}
+}
 
 /* USER CODE END 4 */
 

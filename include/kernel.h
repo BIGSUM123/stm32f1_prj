@@ -57,6 +57,19 @@ typedef struct mutex_control_block {
 
 #define MUTEX_MAGIC                0x4D555458  // "MUTX"
 
+/* Semaphore Control Block */
+typedef struct semaphore_control_block {
+    char name[16];                 // 信号量名称
+    uint32_t count;                // 当前计数值
+    uint32_t max_count;            // 最大计数值
+    tcb_t *wait_list_head;         // 等待队列头
+    tcb_t *wait_list_tail;         // 等待队列尾
+    bool is_binary;                // 是否为二进制信号量
+    uint32_t magic;                // 魔数，用于检测对象有效性
+} semaphore_t;
+
+#define SEMAPHORE_MAGIC            0x53454D58  // "SEMX"
+
 /* Global Variables */
 extern tcb_t *pxCurrentTCB;        // 当前任务指针（保持兼容性）
 
@@ -69,5 +82,6 @@ void remove_from_ready_queue(tcb_t *task);
 
 /* Synchronization Object Management */
 bool mutex_remove_waiting_task(tcb_t *task);
+bool semaphore_remove_waiting_task(tcb_t *task);
 
 #endif // __KERNEL_H__

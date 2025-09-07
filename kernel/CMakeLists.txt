@@ -5,6 +5,7 @@ add_library(kernel STATIC
     rtos_core.c
     timeout.c
     mutex.c
+    semaphore.c
 )
 
 target_include_directories(kernel 

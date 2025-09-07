@@ -762,9 +762,12 @@ static void process_delayed_tasks(void)
 						 0) {
 					// Waiting timeout expired
 
-					// Remove from wait list first (before clearing
-					// waiting_object)
-					mutex_remove_waiting_task(task);
+					// Remove from wait list first (before clearing waiting_object)
+					bool removed = mutex_remove_waiting_task(task);
+					if (!removed) {
+						// Try semaphore wait list
+						removed = semaphore_remove_waiting_task(task);
+					}
 
 					// Clear waiting information
 					task->wait_result = RTOS_TIMEOUT;

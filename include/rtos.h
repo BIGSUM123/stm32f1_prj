@@ -49,6 +49,9 @@ typedef struct task_control_block* task_handle_t;
 struct mutex_control_block;
 typedef struct mutex_control_block* mutex_handle_t;
 
+struct semaphore_control_block;
+typedef struct semaphore_control_block* semaphore_handle_t;
+
 /* Wait Options */
 #define RTOS_WAIT_FOREVER           0xFFFFFFFF
 #define RTOS_NO_WAIT                0
@@ -98,6 +101,14 @@ rtos_error_t mutex_delete(mutex_handle_t mutex);
 rtos_error_t mutex_lock(mutex_handle_t mutex, uint32_t timeout);
 rtos_error_t mutex_unlock(mutex_handle_t mutex);
 task_handle_t mutex_get_owner(mutex_handle_t mutex);
+
+/* Semaphore Functions */
+semaphore_handle_t sem_create_binary(const char *name, uint32_t initial_count);
+semaphore_handle_t sem_create_counting(const char *name, uint32_t max_count, uint32_t initial_count);
+rtos_error_t sem_delete(semaphore_handle_t sem);
+rtos_error_t sem_wait(semaphore_handle_t sem, uint32_t timeout);
+rtos_error_t sem_post(semaphore_handle_t sem);
+uint32_t sem_get_count(semaphore_handle_t sem);
 
 #ifdef __cplusplus
 }
