@@ -18,19 +18,21 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-// #include "cli.h"
-// #include "cli_commands.h"
-// #include "gpio.h"
-// #include "log.h"
+#include "cli.h"
+#include "cli_commands.h"
+#include "gpio.h"
+#include "log.h"
 #include <stdint.h>
 #include "stm32f4xx.h"
 #include "stm32f4xx_ll_gpio.h"
 #include "stm32f4xx_ll_bus.h"
+#include "stm32f4xx_ll_pwr.h"
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_system.h"
 #include "stm32f4xx_ll_utils.h"
 #include "stm32f4xx_ll_cortex.h"
 #include "kernel.h"
+#include "rtos.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -67,66 +69,15 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// 将yield函数改为宏定义提高效率
-#define rtos_yield() do { \
-    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; \
-    __DSB(); \
-    __ISB(); \
-} while(0)
+/* RTOS Test Tasks */
+void led_task(void *parameter);
+void cli_task(void *parameter);
 
-void thread1(void);
-void thread2(void);
+/* Task handles */
+static task_handle_t led_task_handle = NULL;
+static task_handle_t cli_task_handle = NULL;
 
-// 使用 __attribute__((aligned(8))) 强制栈数组 8 字节对齐
-uint32_t thread1_stack[256] __attribute__((aligned(8)));
-uint32_t thread2_stack[256] __attribute__((aligned(8)));
-
-tcb_t tcb1 = {
-    .stack_ptr = thread1_stack,
-};
-
-tcb_t tcb2 = {
-    .stack_ptr = thread2_stack,
-};
-
-tcb_t *pxCurrentTCB;      // 当前任务指针
-
-void w_scheduler()
-{
-    if (pxCurrentTCB == &tcb1)
-        pxCurrentTCB = &tcb2;
-    else
-        pxCurrentTCB = &tcb1;
-}
-
-// 栈初始化工具函数
-void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
-    // 栈起始地址（确保 8 字节对齐）
-    uint32_t *stack_start = (uint32_t*)((uint32_t)tcb->stack_ptr & ~0x7);
-    
-    // 栈顶指针指向数组末尾（最高地址）
-    uint32_t *sp = stack_start + 256; // 0x200008A0
-    
-    // 预留硬件自动保存的 8 个字空间（向下生长）
-    sp -= 8;  // 此时 sp = 0x20000880
-    
-    // 按 Cortex-M 压栈顺序初始化（高地址 → 低地址）
-    sp[7] = 0x01000000U;      // xPSR (Thumb 模式)
-    sp[6] = (uint32_t)entry;   // PC (线程入口地址)
-    sp[5] = 0xFFFFFFFDU;      // LR (无效返回地址)
-    sp[4] = 0x00000000U;      // R12
-    sp[3] = 0x00000000U;      // R3
-    sp[2] = 0x00000000U;      // R2
-    sp[1] = 0x00000000U;      // R1
-    sp[0] = 0x00000000U;      // R0
-
-    //R4-R11 预留空间
-    sp -= 8;
-    
-    // 更新 TCB 中的栈指针（指向硬件帧起始地址）
-    tcb->stack_ptr = sp;  // 0x20000880
-    tcb->entry = entry;
-}
+uint32_t uart_init_ret = 0;
 
 /**
  * @brief  The application entry point.
@@ -134,132 +85,178 @@ void thread_stack_init(tcb_t *tcb, void (*entry)(void)) {
  */
 int main(void)
 {
-    // // 初始化 NVIC 优先级分组
-    // NVIC_SetPriorityGrouping(0x00000003U);
-    // SystemClock_Config();
-    // MX_GPIO_Init();
-    // log_init();
+	SystemInit();
 
-    // // device_init_all();
+	// 初始化 NVIC 优先级分组
+	NVIC_SetPriorityGrouping(0x00000003U);
+	SystemClock_Config();
 
-    // cli_init();
-    // cli_register_basic_commands();
+	led_init();
+	uart_init_ret = log_init();
 
-    // // 初始化 PendSV 优先级
-    // NVIC_SetPriority(PendSV_IRQn, 0xFF);
+	// 添加调试信息 - 检查时钟配置
+	volatile uint32_t sysclk = SystemCoreClock; // 应该是168MHz
+	volatile uint32_t apb2_div = (RCC->CFGR & RCC_CFGR_PPRE2) >> RCC_CFGR_PPRE2_Pos;
+	volatile uint32_t apb2_clk = (apb2_div < 4) ? sysclk : sysclk / (1 << (apb2_div - 3));
+	volatile uint32_t usart_brr = USART1->BRR;
 
-    // // 初始化线程栈
-    // thread_stack_init(&tcb1, thread1);
-    // thread_stack_init(&tcb2, thread2);
+	(void)sysclk;
+	(void)apb2_clk;
+	(void)usart_brr; // 防止编译器优化
 
-    // pxCurrentTCB = &tcb1;
+	cli_init();
+	cli_register_basic_commands();
 
-    // // 启用全局中断
-    // __enable_irq();
+	LOG_DBG("System initialized, RTOS starting...");
 
-    // // 触发首次上下文切换（手动跳转到线程1）
-    // extern void start_first_thread();
-    // start_first_thread();
+	// Check if RTOS is initialized
+	extern bool rtos_is_initialized(void);
+	if (!rtos_is_initialized()) {
+		LOG_DBG("ERROR: RTOS not initialized!");
+		while (1)
+			;
+	}
 
-    // while (1);
-}
+	// Set interrupt priorities according to RTOS standards
+	// SysTick should have highest priority for accurate timing
+	NVIC_SetPriority(SysTick_IRQn, 0x00); // Highest priority
 
-void led_test()
-{
-    LL_GPIO_InitTypeDef led_init;
+	// PendSV should have lowest priority to avoid blocking other interrupts
+	NVIC_SetPriority(PendSV_IRQn, 0xFF); // Lowest priority
 
-    // 使能 GPIOB 时钟
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+	// SVC should also have high priority
+	// NVIC_SetPriority(SVCall_IRQn, 0x00); // Highest priority
 
-    LL_GPIO_StructInit(&led_init);
-    led_init.Pin = LL_GPIO_PIN_2;
-    led_init.Mode = LL_GPIO_MODE_OUTPUT;
-    led_init.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-    led_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;    
-    LL_GPIO_Init(GPIOB, &led_init);
+	// Create RTOS tasks
+	led_task_handle = task_create("LED_TASK", led_task, NULL, 512, RTOS_PRIORITY_NORMAL);
+	if (led_task_handle == NULL) {
+		LOG_DBG("Failed to create LED task");
+	} else {
+		LOG_DBG("LED task created successfully");
+	}
 
-    volatile int i = 2000000;
-    while (1) {
-        i = 2000000;
-        while (i--);
-        LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_2);
-        i = 2000000;
-        while (i--);
-        LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_2);
-    }
-}
+	cli_task_handle = task_create("CLI_TASK", cli_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	if (cli_task_handle == NULL) {
+		LOG_DBG("Failed to create CLI task");
+	} else {
+		LOG_DBG("CLI task created successfully");
+	}
 
-void thread1(void)
-{
-    // LOG_DBG("thread1");
-    // while (1)
-    // {
-    //     uint8_t ch;
-    //     if (log_read(&ch) == 1) {
-    //         cli_process_char(ch);
-    //     }
-    // }
-}
+	// Debug: Check system state before starting
+	extern uint8_t rtos_get_ready_bitmap(void);
+	uint8_t bitmap = rtos_get_ready_bitmap();
+	LOG_DBG("Ready bitmap: 0x%02X", bitmap);
 
-
-void thread2(void)
-{
-    // LOG_DBG("thread2");
-    // uint8_t ch = 0;
-    // while (1)
-    // {
-    //     ch++;
-
-    //     led_ctrl(LED_ON);
-    //     LL_mDelay(1000);
-    //     led_ctrl(LED_OFF);
-        
-    //     if (ch >= 5) {
-    //         ch = 0;
-    //         LOG_DBG("switch to thread1");
-    //         rtos_yield();
-    //         LOG_DBG("this is thread2");
-    //         led_ctrl(LED_OFF);
-    //     }
-
-    //     LL_mDelay(1000);
-    // }
+	// Debug: Check SystemCoreClock
+	extern uint32_t SystemCoreClock;
+	LOG_DBG("SystemCoreClock: %lu Hz", SystemCoreClock);
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
+ * @brief LED task - blinks LED and demonstrates task switching
+ */
+void led_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("LED task started");
+
+	uint32_t counter = 0;
+
+	while (1) {
+		counter++;
+
+		led_ctrl(LED_ON);
+
+		// Shorter busy wait to allow task switching
+		task_delay_ms(1000);
+		led_ctrl(LED_OFF);
+
+		// Shorter busy wait to allow task switching
+		task_delay_ms(1000);
+
+		// More frequent debug output and yielding
+		if (counter % 2 == 0) {
+			// LOG_DBG("LED task running, count: %lu", counter);
+		}
+	}
+}
+
+/**
+ * @brief CLI task - handles command line interface
+ */
+void cli_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("CLI task started");
+
+	while (1) {
+		uint8_t ch;
+		if (log_read(&ch) == 1) {
+			cli_process_char(ch);
+		}
+	}
+}
+
+/**
+ * @brief  System Clock Configuration for STM32F407
+ *         System Clock source            = PLL (HSE)
+ *         SYSCLK(Hz)                     = 168000000
+ *         HCLK(Hz)                       = 168000000
+ *         AHB Prescaler                  = 1
+ *         APB1 Prescaler                 = 4 (max 42 MHz)
+ *         APB2 Prescaler                 = 2 (max 84 MHz)
+ *         PLL_M                          = 8  (HSE = 8MHz)
+ *         PLL_N                          = 336
+ *         PLL_P                          = 2
+ *         PLL_Q                          = 7 (for USB OTG FS)
  */
 void SystemClock_Config(void)
 {
-    // // 配置 Flash 等待周期和预取缓冲
-    // LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
-    // LL_FLASH_EnablePrefetch();
+	// 配置 Flash 等待周期和预取缓冲
+	LL_FLASH_SetLatency(LL_FLASH_LATENCY_5);
+	LL_FLASH_EnablePrefetch();
 
-    // // 使能 HSI
-    // LL_RCC_HSI_Enable();
-    // while(LL_RCC_HSI_IsReady() != 1);
+	// 1. 开启 HSE
+	LL_RCC_HSE_Enable();
+	while (LL_RCC_HSE_IsReady() != 1)
+		;
 
-    // // 配置 PLL (HSI/2 * 16 = 72MHz)
-    // LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_16);
-    
-    // // 使能 PLL
-    // LL_RCC_PLL_Enable();
-    // while(LL_RCC_PLL_IsReady() != 1);
+	// 2. 设置电源和电压调节（必须）
+	// 首先使能PWR时钟
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
 
-    // // 设置系统分频
-    // LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-    // LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2); 
-    // LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
-    
-    // // 设置系统时钟源为 PLL
-    // LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-    // while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+	LL_PWR_EnableBkUpAccess();
+	LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
 
-    // // 配置 SysTick
-    // SystemCoreClockUpdate();
-    // LL_InitTick(72000000, 1000U);  // 1ms 的 SysTick 中断
-    // LL_SYSTICK_EnableIT();
+	// 简单延时等待电压稳定（更可靠的方法）
+	for (volatile uint32_t i = 0; i < 10000; i++)
+		;
+
+	// 3. 开启 PLL 并配置参数
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_8, 336,
+				    LL_RCC_PLLP_DIV_2); // 8MHz /8 * 336 /2 = 168 MHz
+	LL_RCC_PLL_Enable();
+	while (LL_RCC_PLL_IsReady() != 1)
+		;
+
+	// 4. 设置总线分频器
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1); // HCLK = 168 MHz
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_4);  // APB1 = 42 MHz
+	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);  // APB2 = 84 MHz
+
+	// 5. 切换系统时钟源为 PLL
+	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
+		;
+
+	// 6. 更新系统核心时钟变量
+	SystemCoreClockUpdate();
+
+	// 7. 初始化 SysTick 定时器（1ms）
+	LL_InitTick(SystemCoreClock, 100);
+	LL_SYSTICK_EnableIT();
 }
 
 /* USER CODE BEGIN 4 */
@@ -272,13 +269,12 @@ void SystemClock_Config(void)
  */
 void Error_Handler(void)
 {
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-    __disable_irq();
-    while (1)
-    {
-    }
-    /* USER CODE END Error_Handler_Debug */
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef USE_FULL_ASSERT
@@ -291,9 +287,9 @@ void Error_Handler(void)
  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-    /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    /* USER CODE END 6 */
+	/* USER CODE BEGIN 6 */
+	/* User can add his own implementation to report the file name and line number,
+	   ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+	/* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

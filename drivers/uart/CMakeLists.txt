@@ -1,17 +1,12 @@
-target_sources(drivers PRIVATE
-    # uart_stm32f1.c
-    uart_stm32f4.c
-)
+# 根据平台自动选择UART驱动
+if(MCU_FAMILY STREQUAL "STM32F1")
+    target_sources(drivers PRIVATE uart_stm32f1.c)
+elseif(MCU_FAMILY STREQUAL "STM32F4")
+    target_sources(drivers PRIVATE uart_stm32f4.c)
+elseif(MCU_FAMILY STREQUAL "STM32F7")
+    target_sources(drivers PRIVATE uart_stm32f7.c)  # 未来扩展
+endif()
 
-target_include_directories(drivers PRIVATE
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/modules/STM32F4xx_HAL/CMSIS/Include
-        ${CMAKE_SOURCE_DIR}/modules/STM32F4xx_HAL/CMSIS/Device/ST/STM32F4xx/Include
-        ${CMAKE_SOURCE_DIR}/modules/STM32F4xx_HAL/STM32F4xx_HAL_Driver/Inc
-        ${CMAKE_SOURCE_DIR}/modules/STM32F4xx_HAL/STM32F4xx_HAL_Driver/Inc/Legacy
-)
-
-target_compile_definitions(drivers PRIVATE
-    STM32F407xx
-    USE_FULL_LL_DRIVER
-)
+# 使用平台配置的包含路径和定义
+target_include_directories(drivers PRIVATE ${PLATFORM_INCLUDES})
+target_compile_definitions(drivers PRIVATE ${PLATFORM_DEFINES})

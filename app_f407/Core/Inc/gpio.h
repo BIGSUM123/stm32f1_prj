@@ -40,7 +40,7 @@ typedef enum {
   LED_ON,
 } led_state;
 
-void MX_GPIO_Init(void);
+void led_init(void);
 
 int led_ctrl(led_state state);
 

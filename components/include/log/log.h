@@ -13,10 +13,11 @@ typedef enum {
 } log_level_t;
 
 /**
- * @brief 
+ * @brief 初始化日志
  * 
+ * @return int32_t 
  */
-void log_init();
+int32_t log_init();
 
 /**
  * @brief 

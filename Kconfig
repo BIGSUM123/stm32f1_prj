@@ -1,0 +1,127 @@
+# STM32 RTOS 配置文件 (Kconfig风格)
+# 这是一个简化的Kconfig示例，展示如何组织配置
+
+mainmenu "STM32 RTOS Configuration"
+
+choice PLATFORM
+    prompt "Target Platform"
+    default PLATFORM_STM32F407
+    help
+      Select the target MCU platform
+
+config PLATFORM_STM32F103
+    bool "STM32F103 (Cortex-M3)"
+    help
+      STM32F103 series with Cortex-M3 core
+      - No FPU
+      - No DSP instructions
+      - 64KB Flash, 20KB RAM
+
+config PLATFORM_STM32F407
+    bool "STM32F407 (Cortex-M4)"
+    help
+      STM32F407 series with Cortex-M4 core
+      - Optional FPU
+      - DSP instructions
+      - 512KB Flash, 192KB RAM
+
+config PLATFORM_STM32F746
+    bool "STM32F746 (Cortex-M7)"
+    help
+      STM32F746 series with Cortex-M7 core
+      - Enhanced FPU
+      - DSP instructions
+      - Cache support
+      - 1MB Flash, 320KB RAM
+
+endchoice
+
+menu "Hardware Features"
+
+config USE_FPU
+    bool "Use Hardware FPU"
+    depends on PLATFORM_STM32F407 || PLATFORM_STM32F746
+    default y
+    help
+      Enable hardware floating point unit for better performance
+
+config USE_DSP
+    bool "Use DSP Instructions"
+    depends on PLATFORM_STM32F407 || PLATFORM_STM32F746
+    default y
+    help
+      Enable ARM DSP instructions for signal processing
+
+config USE_DMA
+    bool "Use DMA"
+    default y
+    help
+      Enable DMA for high-speed data transfers
+
+endmenu
+
+menu "System Components"
+
+config USE_CLI
+    bool "Command Line Interface"
+    default y
+    help
+      Enable interactive command line interface
+
+config USE_LOG
+    bool "Logging System"
+    default y
+    help
+      Enable system logging with multiple levels
+
+config LOG_LEVEL
+    int "Log Level (0=None, 1=Error, 2=Warn, 3=Info, 4=Debug)"
+    depends on USE_LOG
+    range 0 4
+    default 3
+
+config USE_FLASH_MANAGER
+    bool "Flash Manager"
+    default n
+    help
+      Enable flash memory management utilities
+
+endmenu
+
+menu "Build Options"
+
+choice BUILD_TYPE
+    prompt "Build Type"
+    default BUILD_RELEASE
+
+config BUILD_DEBUG
+    bool "Debug"
+    help
+      Debug build with symbols and no optimization
+
+config BUILD_RELEASE
+    bool "Release"
+    help
+      Release build with optimization
+
+config BUILD_SIZE
+    bool "Size Optimized"
+    help
+      Build optimized for minimum code size
+
+endchoice
+
+config ENABLE_ASSERT
+    bool "Enable Assertions"
+    default y if BUILD_DEBUG
+    default n if !BUILD_DEBUG
+    help
+      Enable runtime assertions for debugging
+
+config ENABLE_PROFILING
+    bool "Enable Profiling"
+    default n
+    help
+      Enable performance profiling support
+
+endmenu

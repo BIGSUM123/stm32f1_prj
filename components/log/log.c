@@ -1,5 +1,6 @@
 #include "log.h"
 #include "log_config.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include "drivers/uart.h"
@@ -26,10 +27,10 @@ const struct device *log_uart;
  * @brief 
  * 
  */
-void log_init()
+int32_t log_init()
 {
     log_uart = device_get_binding("uart1");
-    uart_configure(log_uart, NULL);
+    return uart_configure(log_uart, NULL);
 }
 
 /**

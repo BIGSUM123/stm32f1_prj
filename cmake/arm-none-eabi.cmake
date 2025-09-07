@@ -19,9 +19,15 @@ set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
 set(CMAKE_OBJCOPY "${TOOLCHAIN_PATH}/arm-none-eabi-objcopy${EXE_SUFFIX}")
 set(CMAKE_SIZE "${TOOLCHAIN_PATH}/arm-none-eabi-size${EXE_SUFFIX}")
 
-# MCU 标志
-set(CPU_FLAGS "-mcpu=cortex-m4 -mthumb")
-set(COMMON_FLAGS "${CPU_FLAGS} -Wall -fdata-sections -ffunction-sections -std=c11")
+# MCU 标志 (从平台配置获取)
+if(DEFINED CPU_FLAGS)
+    set(MCU_FLAGS ${CPU_FLAGS})
+else()
+    # 默认配置 (如果平台配置未加载)
+    set(MCU_FLAGS "-mcpu=cortex-m4 -mthumb")
+endif()
+
+set(COMMON_FLAGS "${MCU_FLAGS} -Wall -fdata-sections -ffunction-sections -std=c11")
 
 # 编译标志
 set(CMAKE_C_FLAGS "${COMMON_FLAGS}" CACHE STRING "C compiler flags")

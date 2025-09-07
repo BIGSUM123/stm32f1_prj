@@ -1,7 +1,7 @@
 add_executable(app_f407
     Core/Src/main.c
-    # Core/Src/gpio.c
-    # Core/Src/cli_commands.c
+    Core/Src/gpio.c
+    Core/Src/cli_commands.c
     # Core/Src/stm32ffxx_it.c
     Core/Src/system_stm32f4xx.c
     Core/Src/sysmem.c
@@ -11,6 +11,7 @@ add_executable(app_f407
     ${CMAKE_SOURCE_DIR}/arch/arm/fault_s.S
     ${CMAKE_SOURCE_DIR}/arch/arm/swap_helper.S
     ${CMAKE_SOURCE_DIR}/arch/arm/prep_c.c
+    ${CMAKE_SOURCE_DIR}/arch/arm/cortex_m_systick.c
 )
 
 target_compile_definitions(app_f407
@@ -27,9 +28,9 @@ target_include_directories(app_f407 PRIVATE
 )
 
 target_link_libraries(app_f407 PRIVATE
-    # drivers
+    drivers
     kernel
-    # components
+    components
     stm32f4_module
 )
 

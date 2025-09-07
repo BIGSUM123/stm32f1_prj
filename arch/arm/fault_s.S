@@ -1,7 +1,7 @@
 #include "toolchain/gcc.h"
 
     .syntax unified
-    .cpu cortex-m3
+    .cpu cortex-m4
     .fpu softvfp
     .thumb
 
@@ -27,8 +27,20 @@ SECTION_SUBSEC_FUNC(text,__fault,w_arm_exc_spurious)
  * 
  */
 GTEXT(w_arm_nmi)
-GTEXT(sys_clock_isr)
+// GTEXT(sys_clock_isr)
 
 SECTION_SUBSEC_FUNC(text,__fault,w_arm_nmi)
-SECTION_SUBSEC_FUNC(text,__fault,sys_clock_isr)
     bx lr
+
+/**
+SECTION_SUBSEC_FUNC(text,__fault,sys_clock_isr)
+    // Save context
+    push {lr}
+
+    // Call RTOS SysTick handler
+    bl SysTick_Handler
+
+    // Restore context and return
+    pop {lr}
+    bx lr
+*/

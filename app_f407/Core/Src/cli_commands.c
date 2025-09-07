@@ -4,7 +4,7 @@
 #include "log.h"
 #include "gpio.h"
 #include <string.h>
-#include "stm32f103x6.h"
+#include "stm32f4xx.h"
 
 static int cmd_help(int argc, char *argv[])
 {

@@ -1,5 +1,5 @@
 CompileFlags:
-  CompilationDatabase: build
+  CompilationDatabase: build_F4
 
   Add:
     # 标准库头文件路径
