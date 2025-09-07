@@ -4,6 +4,7 @@
 #include "log.h"
 #include "gpio.h"
 #include <string.h>
+#include <stdlib.h>
 #include "stm32f4xx.h"
 
 static int cmd_help(int argc, char *argv[])
@@ -15,6 +16,7 @@ static int cmd_help(int argc, char *argv[])
     log_printf("  switch     - Trigger context switch\r\n");
     log_printf("  thread     - Show current thread info\r\n");
     log_printf("  sem_test   - Test semaphore operations\r\n");
+    log_printf("  queue_test - Test message queue operations\r\n");
     return 0;
 }
 
@@ -121,13 +123,113 @@ static int cmd_sem_test(int argc, char *argv[])
     return 0;
 }
 
+static int cmd_queue_test(int argc, char *argv[])
+{
+    extern queue_handle_t test_queue, char_queue;
+    
+    if (argc < 2) {
+        log_printf("Usage: queue_test <test|char> [send|recv] [value]\r\n");
+        log_printf("  queue_test test send 123   - Send number to test queue\r\n");
+        log_printf("  queue_test test recv       - Receive from test queue\r\n");
+        log_printf("  queue_test char send A     - Send character to char queue\r\n");
+        log_printf("  queue_test char recv       - Receive from char queue\r\n");
+        log_printf("  queue_test status          - Show queue status\r\n");
+        return -1;
+    }
+
+    if (strcmp(argv[1], "status") == 0) {
+        log_printf("Test queue: count=%lu, free=%lu\r\n", 
+            queue_get_count(test_queue), queue_get_free_space(test_queue));
+        log_printf("Char queue: count=%lu, free=%lu\r\n", 
+            queue_get_count(char_queue), queue_get_free_space(char_queue));
+        return 0;
+    }
+
+    if (argc < 3) {
+        log_printf("Usage: queue_test <test|char> [send|recv] [value]\r\n");
+        return -1;
+    }
+
+    queue_handle_t queue = NULL;
+    if (strcmp(argv[1], "test") == 0) {
+        queue = test_queue;
+    } else if (strcmp(argv[1], "char") == 0) {
+        queue = char_queue;
+    } else {
+        log_printf("Invalid queue type. Use 'test' or 'char'\r\n");
+        return -1;
+    }
+
+    if (strcmp(argv[2], "send") == 0) {
+        if (strcmp(argv[1], "test") == 0) {
+            if (argc < 4) {
+                log_printf("Usage: queue_test test send <number>\r\n");
+                return -1;
+            }
+            uint32_t value = (uint32_t)atoi(argv[3]);
+            rtos_error_t result = queue_send(queue, &value, rtos_ms_to_ticks(1000));
+            if (result == RTOS_OK) {
+                log_printf("Number %lu sent to test queue (count=%lu)\r\n", 
+                    value, queue_get_count(queue));
+            } else {
+                log_printf("Failed to send number (error=%d)\r\n", result);
+            }
+        } else { // char queue
+            if (argc < 4) {
+                log_printf("Usage: queue_test char send <character>\r\n");
+                return -1;
+            }
+            char ch = argv[3][0];
+            rtos_error_t result = queue_send(queue, &ch, rtos_ms_to_ticks(1000));
+            if (result == RTOS_OK) {
+                log_printf("Character '%c' sent to char queue (count=%lu)\r\n", 
+                    ch, queue_get_count(queue));
+            } else {
+                log_printf("Failed to send character (error=%d)\r\n", result);
+            }
+        }
+    } else if (strcmp(argv[2], "recv") == 0) {
+        if (strcmp(argv[1], "test") == 0) {
+            uint32_t value;
+            log_printf("Receiving from test queue (timeout=2s)...\r\n");
+            rtos_error_t result = queue_receive(queue, &value, rtos_ms_to_ticks(2000));
+            if (result == RTOS_OK) {
+                log_printf("Number %lu received from test queue (count=%lu)\r\n", 
+                    value, queue_get_count(queue));
+            } else if (result == RTOS_TIMEOUT) {
+                log_printf("Timeout receiving from test queue\r\n");
+            } else {
+                log_printf("Failed to receive from test queue (error=%d)\r\n", result);
+            }
+        } else { // char queue
+            char ch;
+            log_printf("Receiving from char queue (timeout=2s)...\r\n");
+            rtos_error_t result = queue_receive(queue, &ch, rtos_ms_to_ticks(2000));
+            if (result == RTOS_OK) {
+                log_printf("Character '%c' received from char queue (count=%lu)\r\n", 
+                    ch, queue_get_count(queue));
+            } else if (result == RTOS_TIMEOUT) {
+                log_printf("Timeout receiving from char queue\r\n");
+            } else {
+                log_printf("Failed to receive from char queue (error=%d)\r\n", result);
+            }
+        }
+    } else {
+        log_printf("Invalid operation. Use 'send' or 'recv'\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 const static cli_command_t basic_commands[] = {
     {"help", "Show available commands", cmd_help},
     {"led", "Contrl led (on/off)", cmd_led},
     {"version", "Show firmware version", cmd_version},
     {"switch", "Change thread", cmd_switch},
     {"thread", "get thread type", cmd_thread},
-    {"sem_test", "Test semaphore operations", cmd_sem_test}
+    {"sem_test", "Test semaphore operations", cmd_sem_test},
+    {"queue_test", "Test message queue operations", cmd_queue_test}
 };
 
 int cli_register_basic_commands()

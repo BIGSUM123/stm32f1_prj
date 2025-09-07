@@ -76,6 +76,8 @@ void mutex_test_task1(void *parameter);
 void mutex_test_task2(void *parameter);
 void semaphore_producer_task(void *parameter);
 void semaphore_consumer_task(void *parameter);
+void queue_sender_task(void *parameter);
+void queue_receiver_task(void *parameter);
 
 /* Task handles */
 static task_handle_t led_task_handle = NULL;
@@ -84,6 +86,8 @@ static task_handle_t mutex_task1_handle = NULL;
 static task_handle_t mutex_task2_handle = NULL;
 static task_handle_t sem_producer_handle = NULL;
 static task_handle_t sem_consumer_handle = NULL;
+static task_handle_t queue_sender_handle = NULL;
+static task_handle_t queue_receiver_handle = NULL;
 
 /* Shared mutex for testing */
 static mutex_handle_t uart_mutex = NULL;
@@ -91,6 +95,10 @@ static mutex_handle_t uart_mutex = NULL;
 /* Shared semaphores for testing */
 semaphore_handle_t binary_sem = NULL;
 semaphore_handle_t counting_sem = NULL;
+
+/* Shared queues for testing */
+queue_handle_t test_queue = NULL;
+queue_handle_t char_queue = NULL;
 
 uint32_t uart_init_ret = 0;
 
@@ -182,34 +190,66 @@ int main(void)
 	// }
 	(void)mutex_task2_handle;
 
-	// Create semaphores for testing
-	binary_sem = sem_create_binary("BIN_SEM", 0);  // Initially empty
-	if (binary_sem == NULL) {
-		LOG_DBG("Failed to create binary semaphore");
+	// // Create semaphores for testing
+	// binary_sem = sem_create_binary("BIN_SEM", 0);  // Initially empty
+	// if (binary_sem == NULL) {
+	// 	LOG_DBG("Failed to create binary semaphore");
+	// } else {
+	// 	LOG_DBG("Binary semaphore created successfully");
+	// }
+
+	// counting_sem = sem_create_counting("COUNT_SEM", 5, 2);  // Max 5, initial 2
+	// if (counting_sem == NULL) {
+	// 	LOG_DBG("Failed to create counting semaphore");
+	// } else {
+	// 	LOG_DBG("Counting semaphore created successfully");
+	// }
+
+	// // Create semaphore test tasks
+	// sem_producer_handle = task_create("SEM_PROD", semaphore_producer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	// if (sem_producer_handle == NULL) {
+	// 	LOG_DBG("Failed to create semaphore producer task");
+	// } else {
+	// 	LOG_DBG("Semaphore producer task created successfully");
+	// }
+	(void)sem_producer_handle;
+
+	// sem_consumer_handle = task_create("SEM_CONS", semaphore_consumer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	// if (sem_consumer_handle == NULL) {
+	// 	LOG_DBG("Failed to create semaphore consumer task");
+	// } else {
+	// 	LOG_DBG("Semaphore consumer task created successfully");
+	// }
+	(void)sem_consumer_handle;
+
+	// Create message queues for testing
+	test_queue = queue_create("TEST_Q", 5, sizeof(uint32_t));  // Queue of 5 uint32_t messages
+	if (test_queue == NULL) {
+		LOG_DBG("Failed to create test queue");
 	} else {
-		LOG_DBG("Binary semaphore created successfully");
+		LOG_DBG("Test queue created successfully");
 	}
 
-	counting_sem = sem_create_counting("COUNT_SEM", 5, 2);  // Max 5, initial 2
-	if (counting_sem == NULL) {
-		LOG_DBG("Failed to create counting semaphore");
+	char_queue = queue_create("CHAR_Q", 32, sizeof(char));  // Queue of 32 characters
+	if (char_queue == NULL) {
+		LOG_DBG("Failed to create character queue");
 	} else {
-		LOG_DBG("Counting semaphore created successfully");
+		LOG_DBG("Character queue created successfully");
 	}
 
-	// Create semaphore test tasks
-	sem_producer_handle = task_create("SEM_PROD", semaphore_producer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
-	if (sem_producer_handle == NULL) {
-		LOG_DBG("Failed to create semaphore producer task");
+	// Create queue test tasks
+	queue_sender_handle = task_create("Q_SENDER", queue_sender_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	if (queue_sender_handle == NULL) {
+		LOG_DBG("Failed to create queue sender task");
 	} else {
-		LOG_DBG("Semaphore producer task created successfully");
+		LOG_DBG("Queue sender task created successfully");
 	}
 
-	sem_consumer_handle = task_create("SEM_CONS", semaphore_consumer_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
-	if (sem_consumer_handle == NULL) {
-		LOG_DBG("Failed to create semaphore consumer task");
+	queue_receiver_handle = task_create("Q_RECV", queue_receiver_task, NULL, 1024, RTOS_PRIORITY_NORMAL);
+	if (queue_receiver_handle == NULL) {
+		LOG_DBG("Failed to create queue receiver task");
 	} else {
-		LOG_DBG("Semaphore consumer task created successfully");
+		LOG_DBG("Queue receiver task created successfully");
 	}
 
 	// Debug: Check system state before starting
@@ -478,6 +518,97 @@ void semaphore_consumer_task(void *parameter)
 		}
 
 		task_delay_ms(800); // 800ms delay
+	}
+}
+
+/**
+ * @brief Queue sender task - demonstrates message queue sending
+ */
+void queue_sender_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Queue sender task started");
+
+	uint32_t message_counter = 0;
+
+	while (1) {
+		message_counter++;
+
+		// Send message to test queue
+		uint32_t message = message_counter;
+		rtos_error_t result = queue_send(test_queue, &message, rtos_ms_to_ticks(1000));
+		
+		if (result == RTOS_OK) {
+			LOG_DBG("Sender: Message %lu sent to test queue (count=%lu)", 
+				message, queue_get_count(test_queue));
+		} else if (result == RTOS_TIMEOUT) {
+			LOG_DBG("Sender: Timeout sending message %lu to test queue", message);
+		} else {
+			LOG_DBG("Sender: Error sending message %lu (error=%d)", message, result);
+		}
+
+		// Send character to char queue every 3rd message
+		if ((message_counter % 3) == 0) {
+			char ch = 'A' + (message_counter % 26);
+			result = queue_send(char_queue, &ch, rtos_ms_to_ticks(500));
+			
+			if (result == RTOS_OK) {
+				LOG_DBG("Sender: Character '%c' sent to char queue (count=%lu)", 
+					ch, queue_get_count(char_queue));
+			} else if (result == RTOS_TIMEOUT) {
+				LOG_DBG("Sender: Timeout sending character '%c'", ch);
+			} else {
+				LOG_DBG("Sender: Error sending character '%c' (error=%d)", ch, result);
+			}
+		}
+
+		task_delay_ms(2000); // 2 second delay
+	}
+}
+
+/**
+ * @brief Queue receiver task - demonstrates message queue receiving
+ */
+void queue_receiver_task(void *parameter)
+{
+	(void)parameter; // Unused parameter
+
+	LOG_DBG("Queue receiver task started");
+
+	uint32_t messages_received = 0;
+	uint32_t chars_received = 0;
+
+	while (1) {
+		// Try to receive from test queue
+		uint32_t received_message;
+		rtos_error_t result = queue_receive(test_queue, &received_message, rtos_ms_to_ticks(1500));
+		
+		if (result == RTOS_OK) {
+			messages_received++;
+			LOG_DBG("Receiver: Message %lu received from test queue (#%lu, count=%lu)", 
+				received_message, messages_received, queue_get_count(test_queue));
+		} else if (result == RTOS_TIMEOUT) {
+			LOG_DBG("Receiver: Timeout receiving from test queue");
+		} else {
+			LOG_DBG("Receiver: Error receiving from test queue (error=%d)", result);
+		}
+
+		// Try to receive from char queue
+		char received_char;
+		result = queue_receive(char_queue, &received_char, rtos_ms_to_ticks(200));
+		
+		if (result == RTOS_OK) {
+			chars_received++;
+			LOG_DBG("Receiver: Character '%c' received from char queue (#%lu, count=%lu)", 
+				received_char, chars_received, queue_get_count(char_queue));
+		} else if (result == RTOS_TIMEOUT) {
+			// Don't log timeout for char queue (too frequent)
+		} else {
+			LOG_DBG("Receiver: Error receiving from char queue (error=%d)", result);
+		}
+
+		task_delay_ms(1000); // 1 second delay
 	}
 }
 

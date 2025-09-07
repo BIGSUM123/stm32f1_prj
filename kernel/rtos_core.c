@@ -465,7 +465,6 @@ static uint32_t *allocate_static_stack(uint32_t size, uint32_t *actual_size)
 {
 	// try 512-byte stacks
 	if (size <= 512 && !static_stacks_used[0]) {
-		LOG_DBG("use stack 0");
 		static_stacks_used[0] = true;
 		*actual_size = sizeof(task_stack_1);
 		return task_stack_1;
@@ -476,7 +475,6 @@ static uint32_t *allocate_static_stack(uint32_t size, uint32_t *actual_size)
 		for (int i = 1; i < 5; i++) {
 			if (!static_stacks_used[i]) {
 				static_stacks_used[i] = true;
-				LOG_DBG("use stack %d", i);
 				switch (i) {
 				case 1:
 					*actual_size = sizeof(task_stack_2);
@@ -767,6 +765,10 @@ static void process_delayed_tasks(void)
 					if (!removed) {
 						// Try semaphore wait list
 						removed = semaphore_remove_waiting_task(task);
+					}
+					if (!removed) {
+						// Try queue wait list
+						removed = queue_remove_waiting_task(task);
 					}
 
 					// Clear waiting information

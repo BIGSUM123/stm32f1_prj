@@ -52,6 +52,9 @@ typedef struct mutex_control_block* mutex_handle_t;
 struct semaphore_control_block;
 typedef struct semaphore_control_block* semaphore_handle_t;
 
+struct message_queue_control_block;
+typedef struct message_queue_control_block* queue_handle_t;
+
 /* Wait Options */
 #define RTOS_WAIT_FOREVER           0xFFFFFFFF
 #define RTOS_NO_WAIT                0
@@ -109,6 +112,15 @@ rtos_error_t sem_delete(semaphore_handle_t sem);
 rtos_error_t sem_wait(semaphore_handle_t sem, uint32_t timeout);
 rtos_error_t sem_post(semaphore_handle_t sem);
 uint32_t sem_get_count(semaphore_handle_t sem);
+
+/* Message Queue Functions */
+queue_handle_t queue_create(const char *name, uint32_t queue_length, uint32_t item_size);
+rtos_error_t queue_delete(queue_handle_t queue);
+rtos_error_t queue_send(queue_handle_t queue, const void *item, uint32_t timeout);
+rtos_error_t queue_receive(queue_handle_t queue, void *item, uint32_t timeout);
+rtos_error_t queue_send_from_isr(queue_handle_t queue, const void *item);
+uint32_t queue_get_count(queue_handle_t queue);
+uint32_t queue_get_free_space(queue_handle_t queue);
 
 #ifdef __cplusplus
 }

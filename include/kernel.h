@@ -70,6 +70,24 @@ typedef struct semaphore_control_block {
 
 #define SEMAPHORE_MAGIC            0x53454D58  // "SEMX"
 
+/* Message Queue Control Block */
+typedef struct message_queue_control_block {
+    char name[16];                 // 队列名称
+    uint8_t *buffer;               // 消息缓冲区
+    uint32_t item_size;            // 单个消息大小
+    uint32_t queue_length;         // 队列最大长度
+    uint32_t head;                 // 队列头索引
+    uint32_t tail;                 // 队列尾索引
+    uint32_t count;                // 当前消息数量
+    tcb_t *send_wait_list_head;    // 发送等待队列头
+    tcb_t *send_wait_list_tail;    // 发送等待队列尾
+    tcb_t *recv_wait_list_head;    // 接收等待队列头
+    tcb_t *recv_wait_list_tail;    // 接收等待队列尾
+    uint32_t magic;                // 魔数，用于检测对象有效性
+} message_queue_t;
+
+#define QUEUE_MAGIC                0x51554555  // "QUEU"
+
 /* Global Variables */
 extern tcb_t *pxCurrentTCB;        // 当前任务指针（保持兼容性）
 
@@ -83,5 +101,6 @@ void remove_from_ready_queue(tcb_t *task);
 /* Synchronization Object Management */
 bool mutex_remove_waiting_task(tcb_t *task);
 bool semaphore_remove_waiting_task(tcb_t *task);
+bool queue_remove_waiting_task(tcb_t *task);
 
 #endif // __KERNEL_H__

@@ -6,6 +6,7 @@ add_library(kernel STATIC
     timeout.c
     mutex.c
     semaphore.c
+    message_queue.c
 )
 
 target_include_directories(kernel 
